@@ -1,6 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { Logger } from './src/logger/logger.js';
 import databaseConnection from './src/database/connection.js';
 import routes from './src/routes/index.js';
@@ -13,10 +17,33 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load Swagger specification
+const swaggerSpec = JSON.parse(readFileSync(join(__dirname, 'swagger.json'), 'utf8'));
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Swagger UI configuration
+app.use('/api-docs', swaggerUi.serve);
+app.get('/api-docs', swaggerUi.setup(swaggerSpec, {
+    swaggerOptions: {
+        url: '/api-docs.json',
+        persistAuthorization: true
+    },
+    customCss: '.swagger-ui .opblock-tag { font-weight: bold; }',
+    customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css'
+}));
+
+// Swagger JSON endpoint
+app.get('/api-docs.json', (req, res) => {
+    res.json(swaggerSpec);
+});
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -67,7 +94,8 @@ const initializeApp = async () => {
         app.listen(PORT, () => {
             Logger.log(`Server started on port ${PORT}`, Logger.Level.INFO);
             console.log(`\n✓ Server running at http://localhost:${PORT}`);
-            console.log(`✓ API documentation available at see API_DOCUMENTATION.md`);
+            console.log(`✓ API documentation: http://localhost:${PORT}/api-docs`);
+            console.log(`✓ Swagger JSON: http://localhost:${PORT}/api-docs.json`);
         });
     } catch (error) {
         Logger.log(`Error initializing app: ${error.message}`, Logger.Level.ERROR);

@@ -1,0 +1,2321 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "School Management System API",
+    "description": "Complete REST API for School Management System with authentication, RBAC, student management, fee management, and reporting",
+    "version": "1.0.0",
+    "contact": {
+      "name": "API Support"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Zaihamm Acad server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Organization": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "mobile": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "OrganizationUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "mobile": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["admin", "teacher", "accountant", "principal"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive"]
+          }
+        }
+      },
+      "Student": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "registrationNumber": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "mobile": {
+            "type": "string"
+          },
+          "age": {
+            "type": "integer"
+          },
+          "bloodGroup": {
+            "type": "string"
+          },
+          "classId": {
+            "type": "string"
+          },
+          "sectionId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "graduated"]
+          }
+        }
+      },
+      "Class": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Section": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "classId": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "Fee": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "studentId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["monthly", "quarterly", "annual"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "paid"]
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "paidDate": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "Notice": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check endpoint",
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {
+            "description": "API is running"
+          }
+        }
+      }
+    },
+    "/api/v1/organizations/signup": {
+      "post": {
+        "tags": ["Organization"],
+        "summary": "Signup a new organization with admin user",
+        "operationId": "signupOrganization",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "mobile": {
+                    "type": "string"
+                  },
+                  "address": {
+                    "type": "string"
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "adminEmail": {
+                    "type": "string"
+                  },
+                  "adminPassword": {
+                    "type": "string"
+                  },
+                  "adminMobile": {
+                    "type": "string"
+                  }
+                },
+                "required": ["name", "email", "mobile", "address", "firstName", "lastName", "adminEmail", "adminPassword"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Organization and admin user created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/organizations": {
+      "get": {
+        "tags": ["Organization"],
+        "summary": "Get all organizations",
+        "operationId": "getAllOrganizations",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of organizations"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v1/organizations/{organizationId}": {
+      "get": {
+        "tags": ["Organization"],
+        "summary": "Get organization by ID",
+        "operationId": "getOrganizationById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organization details"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Organization"],
+        "summary": "Update organization",
+        "operationId": "updateOrganization",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Organization"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Organization updated successfully"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Organization"],
+        "summary": "Delete organization",
+        "operationId": "deleteOrganization",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organization deleted successfully"
+          }
+        }
+      }
+    },
+    "/api/v1/organization-users/login": {
+      "post": {
+        "tags": ["Organization Users"],
+        "summary": "Login organization user",
+        "operationId": "loginOrganizationUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "organizationId": {
+                    "type": "string"
+                  }
+                },
+                "required": ["email", "password", "organizationId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful"
+          }
+        }
+      }
+    },
+    "/api/v1/organization-users": {
+      "post": {
+        "tags": ["Organization Users"],
+        "summary": "Create organization user",
+        "operationId": "createOrganizationUser",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "mobile": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string"
+                  }
+                },
+                "required": ["firstName", "lastName", "email", "password", "role"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Organization Users"],
+        "summary": "Get all organization users",
+        "operationId": "getAllOrganizationUsers",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of organization users"
+          }
+        }
+      }
+    },
+    "/api/v1/organization-users/{userId}": {
+      "get": {
+        "tags": ["Organization Users"],
+        "summary": "Get organization user by ID",
+        "operationId": "getOrganizationUserById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User details"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Organization Users"],
+        "summary": "Update organization user",
+        "operationId": "updateOrganizationUser",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganizationUser"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Organization Users"],
+        "summary": "Delete organization user",
+        "operationId": "deleteOrganizationUser",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully"
+          }
+        }
+      }
+    },
+    "/api/v1/classes": {
+      "post": {
+        "tags": ["Classes"],
+        "summary": "Create a new class",
+        "operationId": "createClass",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                },
+                "required": ["name"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Class created successfully"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Classes"],
+        "summary": "Get all classes",
+        "operationId": "getAllClasses",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of classes"
+          }
+        }
+      }
+    },
+    "/api/v1/classes/{classId}": {
+      "get": {
+        "tags": ["Classes"],
+        "summary": "Get class by ID",
+        "operationId": "getClassById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "classId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Class details"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Classes"],
+        "summary": "Update class",
+        "operationId": "updateClass",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "classId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Class"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Class updated successfully"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Classes"],
+        "summary": "Delete class",
+        "operationId": "deleteClass",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "classId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Class deleted successfully"
+          }
+        }
+      }
+    },
+    "/api/v1/sections": {
+      "post": {
+        "tags": ["Sections"],
+        "summary": "Create a new section",
+        "operationId": "createSection",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "classId": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                },
+                "required": ["name", "classId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Section created successfully"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Sections"],
+        "summary": "Get all sections",
+        "operationId": "getAllSections",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of sections"
+          }
+        }
+      }
+    },
+    "/api/v1/sections/{sectionId}": {
+      "get": {
+        "tags": ["Sections"],
+        "summary": "Get section by ID",
+        "operationId": "getSectionById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sectionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Section details"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Sections"],
+        "summary": "Update section",
+        "operationId": "updateSection",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sectionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Section"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Section updated successfully"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Sections"],
+        "summary": "Delete section",
+        "operationId": "deleteSection",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sectionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Section deleted successfully"
+          }
+        }
+      }
+    },
+    "/api/v1/students/admit": {
+      "post": {
+        "tags": ["Students"],
+        "summary": "Admit a new student",
+        "operationId": "admitStudent",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fullName": {
+                    "type": "string"
+                  },
+                  "age": {
+                    "type": "integer"
+                  },
+                  "bloodGroup": {
+                    "type": "string"
+                  },
+                  "mobile": {
+                    "type": "string"
+                  },
+                  "parentMobile": {
+                    "type": "string"
+                  },
+                  "studentEmail": {
+                    "type": "string"
+                  },
+                  "parentEmail": {
+                    "type": "string"
+                  },
+                  "classId": {
+                    "type": "string"
+                  },
+                  "sectionId": {
+                    "type": "string"
+                  },
+                  "year": {
+                    "type": "integer"
+                  }
+                },
+                "required": ["fullName", "age", "classId", "sectionId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Student admitted successfully"
+          }
+        }
+      }
+    },
+    "/api/v1/students/login": {
+      "post": {
+        "tags": ["Students"],
+        "summary": "Student login",
+        "operationId": "studentLogin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "registrationNumber": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": ["registrationNumber", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful"
+          }
+        }
+      }
+    },
+    "/api/v1/students": {
+      "get": {
+        "tags": ["Students"],
+        "summary": "Get all students",
+        "operationId": "getAllStudents",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of students"
+          }
+        }
+      }
+    },
+    "/api/v1/students/{studentId}": {
+      "get": {
+        "tags": ["Students"],
+        "summary": "Get student by ID",
+        "operationId": "getStudentById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Student details"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Students"],
+        "summary": "Update student",
+        "operationId": "updateStudent",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Student"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Student updated successfully"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Students"],
+        "summary": "Delete student",
+        "operationId": "deleteStudent",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Student deleted successfully"
+          }
+        }
+      }
+    },
+    "/api/v1/students/{studentId}/promote": {
+      "post": {
+        "tags": ["Students"],
+        "summary": "Promote student to next class",
+        "operationId": "promoteStudent",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "newClassId": {
+                    "type": "string"
+                  },
+                  "newSectionId": {
+                    "type": "string"
+                  },
+                  "promotionDate": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                },
+                "required": ["newClassId", "newSectionId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Student promoted successfully"
+          }
+        }
+      }
+    },
+    "/api/v1/students/{studentId}/history": {
+      "get": {
+        "tags": ["Students"],
+        "summary": "Get student academic history",
+        "operationId": "getStudentHistory",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Student history"
+          }
+        }
+      }
+    },
+    "/api/v1/fees": {
+      "post": {
+        "tags": ["Fees"],
+        "summary": "Create a new fee",
+        "operationId": "createFee",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "studentId": {
+                    "type": "string"
+                  },
+                  "studentSessionId": {
+                    "type": "string"
+                  },
+                  "classId": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["monthly", "quarterly", "annual"]
+                  },
+                  "amount": {
+                    "type": "number"
+                  },
+                  "dueDate": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                },
+                "required": ["studentId", "classId", "type", "amount", "dueDate"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Fee created successfully"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Fees"],
+        "summary": "Get all fees",
+        "operationId": "getAllFees",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of fees"
+          }
+        }
+      }
+    },
+    "/api/v1/fees/{feeId}": {
+      "get": {
+        "tags": ["Fees"],
+        "summary": "Get fee by ID",
+        "operationId": "getFeeById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "feeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fee details"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Fees"],
+        "summary": "Update fee",
+        "operationId": "updateFee",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "feeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Fee"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Fee updated successfully"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Fees"],
+        "summary": "Delete fee",
+        "operationId": "deleteFee",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "feeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fee deleted successfully"
+          }
+        }
+      }
+    },
+    "/api/v1/fees/student/{studentId}": {
+      "get": {
+        "tags": ["Fees"],
+        "summary": "Get fees by student",
+        "operationId": "getFeesByStudent",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Student fees"
+          }
+        }
+      }
+    },
+    "/api/v1/fees/{feeId}/pay": {
+      "post": {
+        "tags": ["Fees"],
+        "summary": "Mark fee as paid",
+        "operationId": "markFeePaid",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "feeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "paymentDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "paymentMethod": {
+                    "type": "string"
+                  },
+                  "transactionId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Fee marked as paid"
+          }
+        }
+      }
+    },
+    "/api/v1/fees/report/pending": {
+      "get": {
+        "tags": ["Fees"],
+        "summary": "Get pending fees report",
+        "operationId": "getPendingFeesReport",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pending fees report"
+          }
+        }
+      }
+    },
+    "/api/v1/notices": {
+      "post": {
+        "tags": ["Notice Board"],
+        "summary": "Create a new notice",
+        "operationId": "createNotice",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "attachments": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": ["title", "description"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Notice created successfully"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Notice Board"],
+        "summary": "Get all notices",
+        "operationId": "getAllNotices",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of notices"
+          }
+        }
+      }
+    },
+    "/api/v1/notices/recent": {
+      "get": {
+        "tags": ["Notice Board"],
+        "summary": "Get recent notices",
+        "operationId": "getRecentNotices",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recent notices"
+          }
+        }
+      }
+    },
+    "/api/v1/notices/{noticeId}": {
+      "get": {
+        "tags": ["Notice Board"],
+        "summary": "Get notice by ID",
+        "operationId": "getNoticeById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "noticeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notice details"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Notice Board"],
+        "summary": "Update notice",
+        "operationId": "updateNotice",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "noticeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Notice"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Notice updated successfully"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Notice Board"],
+        "summary": "Delete notice",
+        "operationId": "deleteNotice",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "noticeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notice deleted successfully"
+          }
+        }
+      }
+    },
+    "/api/v1/notifications": {
+      "post": {
+        "tags": ["Notifications"],
+        "summary": "Create a new notification",
+        "operationId": "createNotification",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "studentId": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "mobile": {
+                    "type": "string"
+                  }
+                },
+                "required": ["type", "title", "message"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Notification created successfully"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Notifications"],
+        "summary": "Get all notifications",
+        "operationId": "getAllNotifications",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of notifications"
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/student/{studentId}": {
+      "get": {
+        "tags": ["Notifications"],
+        "summary": "Get notifications by student",
+        "operationId": "getNotificationsByStudent",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Student notifications"
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/{notificationId}": {
+      "get": {
+        "tags": ["Notifications"],
+        "summary": "Get notification by ID",
+        "operationId": "getNotificationById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "notificationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notification details"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Notifications"],
+        "summary": "Delete notification",
+        "operationId": "deleteNotification",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "notificationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notification deleted successfully"
+          }
+        }
+      }
+    },
+    "/api/v1/menus": {
+      "post": {
+        "tags": ["Menus"],
+        "summary": "Create a new menu",
+        "operationId": "createMenu",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "icon": {
+                    "type": "string"
+                  },
+                  "order": {
+                    "type": "integer"
+                  },
+                  "parentId": {
+                    "type": "string"
+                  }
+                },
+                "required": ["name", "url", "order"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Menu created successfully"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Menus"],
+        "summary": "Get all menus",
+        "operationId": "getAllMenus",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of menus"
+          }
+        }
+      }
+    },
+    "/api/v1/menus/main/list": {
+      "get": {
+        "tags": ["Menus"],
+        "summary": "Get main menus",
+        "operationId": "getMainMenus",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Main menus"
+          }
+        }
+      }
+    },
+    "/api/v1/menus/{menuId}": {
+      "get": {
+        "tags": ["Menus"],
+        "summary": "Get menu by ID",
+        "operationId": "getMenuById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "menuId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Menu details"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Menus"],
+        "summary": "Update menu",
+        "operationId": "updateMenu",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "menuId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "order": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Menu updated successfully"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Menus"],
+        "summary": "Delete menu",
+        "operationId": "deleteMenu",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "menuId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Menu deleted successfully"
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard/analytics": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Get complete dashboard analytics",
+        "operationId": "getDashboardAnalytics",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard analytics with all summaries"
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard/admission": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Get admission analytics",
+        "operationId": "getAdmissionAnalytics",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admission analytics"
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard/revenue": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Get revenue analytics",
+        "operationId": "getRevenueAnalytics",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Revenue analytics"
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard/students": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Get student analytics",
+        "operationId": "getDashboardStudentAnalytics",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Student analytics"
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard/classes": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Get class analytics",
+        "operationId": "getDashboardClassAnalytics",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Class analytics with student distribution"
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard/sections": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Get section analytics",
+        "operationId": "getDashboardSectionAnalytics",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Section analytics"
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard/notices": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Get notice analytics",
+        "operationId": "getNoticeAnalytics",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notice analytics"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/admission": {
+      "get": {
+        "tags": ["Reports"],
+        "summary": "Get admission report (JSON)",
+        "operationId": "getAdmissionReport",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admission report in JSON format"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/admission/download": {
+      "get": {
+        "tags": ["Reports"],
+        "summary": "Download admission report (CSV)",
+        "operationId": "downloadAdmissionReport",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV file download"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/fees": {
+      "get": {
+        "tags": ["Reports"],
+        "summary": "Get fee report (JSON)",
+        "operationId": "getFeeReport",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fee report in JSON format"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/fees/download": {
+      "get": {
+        "tags": ["Reports"],
+        "summary": "Download fee report (CSV)",
+        "operationId": "downloadFeeReport",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV file download"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/combined": {
+      "get": {
+        "tags": ["Reports"],
+        "summary": "Get combined report (Admission + Fees)",
+        "operationId": "getCombinedReport",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Combined report with admission and fee data"
+          }
+        }
+      }
+    }
+  }
+}
