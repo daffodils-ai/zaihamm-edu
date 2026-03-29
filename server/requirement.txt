@@ -1,0 +1,57 @@
+can you please implement this server, I want to build school management with below features
+ 
+1. Authentication - (organization login, admin reset password, student login, student reset password)
+ Description - organization user / student should be able to login, or reset password.
+	both organization and user should have separate route and controller and service as well as repository and model.
+	for student login details can be fetched from student collection
+ 
+2. role based access control should be there, organization user should be able to create another user which would be part of admin only however role can be organization, admission_staff, teacher, staff, accountant or any other role.
+ 
+for organization model name would be OrganizationUser, and collection name would be organization_user, similarly student should be Student and student respectively
+ 
+3. Each api should be implementing role based access and these role based access should be on middleware layer.
+	so there would be role_access_middleware.js file separately, also there would be auth_middleware.js file to check authentication token and validate using jsonwebtoken.
+ 
+4. use logger.js file for centralized logging, which is already present as part of logger.js file present.
+5. there should be separate controller to do CRUD for class
+ 
+5. menu and submenu should be there, however use the same collection with parentId as ref.
+6. menu and submenu mapping should be there with organization_id as reference can be stored in organization_menu collection and model name would be OrganizationMenu.
+7. each functionality should have CRUD and separate endpoint as routes.
+8. organization_id should be linked to each entity as reference object id.
+9. role with accountant or organization or admission_staff should be able to take student admission, with following details and upon registration it should get saved in student collection and student_id along with class, section & year would be saved in student_session collection and CRUD for student_session as well. in Student Session object there would be default password also saved generated using bcrypt at the time of admission and also generated 16 digit registration number and the same would be sent on student/parent mobile and email, student can use the same for login as part of student login. 
+	- Full Name
+	- Age
+	- Blood Group (Optional)
+	- Mobile (Optional)
+	- Parent Mobile
+	- Student Email (Optional)
+	- Parent Email (Optional)
+	- Father Name
+	- Mother Name
+	- Guardian Name (Optional)
+	- Aadhar No
+	- Parent Aadhar Number
+	- Parent Aadhar Relation - ['father', 'mother', 'brother', 'sister', 'other']
+	- Full Address
+	- Parent Pic - (Optional)
+	- Student pic - (Optional)
+ 
+	- class
+	- section 
+	- year
+ 
+10. All entity should have audit fields like - status, is_active, created_at, updated_at.
+11. there should be CRUD for notice_board, any organization user should have access to create Notice.
+12. there should be notification collection and CRUD for it, for notification functionality.
+13. fee collection should be there which will capture student fee with type as  ['monthly', 'yearly', 'admission', 'exam', 'other'] with all the required column and status as  ['paid', 'pending', ''] and CRUD for it.
+14. Every month on 27th Fee should be raised and notification should be triggered to the specific student email, Mobile and also save the same in notification table.
+15. CRUD means with all functionality along with api endpoint.
+16. There should be option to pass the same student to next year, which would create new entry into student_session collection with new year. if student failed then also create the new record and there should be api to fetch history for the specific year and also the api to get latest session record based on student_id
+17. All the api should have filter for each field.
+18. Its very very important to Follow ES6 and SOLID, DRY, KISS, YAGNI principle.
+19. All the routes should be then imported and merged from index.js routes file and then this index.js should be imported on main.js file
+20. Centralized error handling should be there at middleware layer, there should not be try catch anywhere except centralized handling error, if at all is very necessary then it can have.
+21. have seperate connectivity with database and expose function connect with mongodb with connection pooling.
+22. no hardcoded values, everything in constants file also business logic should be service.
+23. Create a md file mentioning all the API CURL bash along with response data.
