@@ -8,6 +8,8 @@ import menuRoutes from './menuRoutes.js';
 import noticeBoardRoutes from './noticeBoardRoutes.js';
 import notificationRoutes from './notificationRoutes.js';
 import feeRoutes from './feeRoutes.js';
+import dashboardRoutes from './dashboardRoutes.js';
+import reportRoutes from './reportRoutes.js';
 
 const router = express.Router();
 
@@ -21,6 +23,8 @@ router.use('/api/v1/menus', menuRoutes);
 router.use('/api/v1/notices', noticeBoardRoutes);
 router.use('/api/v1/notifications', notificationRoutes);
 router.use('/api/v1/fees', feeRoutes);
+router.use('/api/v1/dashboard', dashboardRoutes);
+router.use('/api/v1/reports', reportRoutes);
 
 // Health check endpoint
 router.get('/api/v1/health', (req, res) => {
