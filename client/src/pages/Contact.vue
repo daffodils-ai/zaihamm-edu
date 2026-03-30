@@ -29,7 +29,7 @@
           <div class="contact-card">
             <div class="contact-icon">📍</div>
             <h3>Address</h3>
-            <p>123 Education Street<br>Academic City, AC 12345<br>Country</p>
+            <p>Jahangira, Jalkaura, Khagaria, Bihar - 851204<br>India</p>
             <a href="#" class="contact-link">
               <i class="bi bi-geo-alt"></i>
               Get Directions
@@ -183,15 +183,16 @@
       <div class="container">
         <h2>Find Our Location</h2>
         <div class="map-container">
-          <div class="map-placeholder">
-            <div class="map-icon">🗺️</div>
-            <h3>Interactive Map</h3>
-            <p>School Location Map</p>
-            <button class="btn btn-primary">
-              <i class="bi bi-geo-alt"></i>
-              Open in Google Maps
-            </button>
-          </div>
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3650.123456789012!2d86.3696621!3d25.5055189!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39f1fb30c498404d%3A0x519d958dc8de8e99!2sDr%20R.S.%20Central%20school!5e0!3m2!1sen!2s!4v1711795200000!5m2!1sen!2s"
+            width="100%"
+            height="450"
+            style="border:0;"
+            allowfullscreen=""
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            title="Dr R.S. Central School Location">
+          </iframe>
         </div>
       </div>
     </section>
@@ -624,29 +625,16 @@ export default {
 .map-container {
   max-width: 1000px;
   margin: 0 auto;
-}
-
-.map-placeholder {
-  background: white;
-  padding: 4rem 2rem;
   border-radius: 12px;
+  overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  text-align: center;
 }
 
-.map-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-}
-
-.map-placeholder h3 {
-  color: #333;
-  margin-bottom: 1rem;
-}
-
-.map-placeholder p {
-  color: #666;
-  margin-bottom: 2rem;
+.map-container iframe {
+  width: 100%;
+  height: 450px;
+  border: 0;
+  border-radius: 12px;
 }
 
 /* Quick Contact Section */
@@ -752,6 +740,10 @@ export default {
 
   .quick-contact-grid {
     grid-template-columns: 1fr;
+  }
+
+  .map-container iframe {
+    height: 300px;
   }
 }
 </style>

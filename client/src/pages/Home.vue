@@ -11,7 +11,7 @@
         </div>
       </div>
       <div class="hero-image">
-        <div class="hero-placeholder">📚 School Campus</div>
+        <img :src="heroImage" alt="School Campus" class="hero-img">
       </div>
     </section>
 
@@ -184,12 +184,14 @@
 
 <script>
 import principalImage from '../assets/rohit.png'
+import heroImage from '../assets/rscentralschimg.png'
 
 export default {
   name: 'Home',
   data() {
     return {
-      principalImage
+      principalImage,
+      heroImage
     }
   },
   methods: {
@@ -287,17 +289,13 @@ export default {
   overflow: hidden;
 }
 
-.hero-placeholder {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 1.5rem;
-  border-radius: 8px;
-  text-align: center;
-  font-size: 2.5rem;
-  font-weight: bold;
+.hero-img {
   max-width: 100%;
-  box-sizing: border-box;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
+  height: auto;
+  max-height: 400px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes fadeInLeft {
@@ -708,10 +706,8 @@ export default {
     font-size: 2rem;
   }
 
-  .hero-placeholder {
-    padding: 1rem;
-    font-size: 2rem;
-    max-width: 90%;
+  .hero-img {
+    max-height: 250px;
   }
 
   .welcome-container {

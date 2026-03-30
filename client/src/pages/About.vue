@@ -7,7 +7,7 @@
         <p class="hero-tagline">Discover our legacy of excellence and commitment to education</p>
       </div>
       <div class="hero-image">
-        <div class="hero-placeholder">🏫</div>
+        <img :src="heroImage" alt="About Our School" class="hero-img">
       </div>
     </section>
 
@@ -43,21 +43,21 @@
           <div class="timeline-item">
             <div class="timeline-marker">📅</div>
             <div class="timeline-content">
-              <h3>2000 - Foundation</h3>
-              <p>Founded in 2000, our school began with a vision to provide exceptional education to the community.</p>
+              <h3>2018 - Foundation</h3>
+              <p>Founded in 2018, our school began with a vision to provide exceptional education to the community.</p>
             </div>
           </div>
           <div class="timeline-item">
             <div class="timeline-marker">🏆</div>
             <div class="timeline-content">
-              <h3>2010 - Recognition</h3>
-              <p>Achieved national recognition for academic excellence and innovative teaching methods.</p>
+              <h3>2020 - Recognition</h3>
+              <p>Achieved recognition for academic excellence and innovative teaching methods.</p>
             </div>
           </div>
           <div class="timeline-item">
             <div class="timeline-marker">🌟</div>
             <div class="timeline-content">
-              <h3>2020 - Digital Transformation</h3>
+              <h3>2025 - Digital Transformation</h3>
               <p>Embraced technology with smart classrooms and modern learning facilities.</p>
             </div>
           </div>
@@ -110,25 +110,17 @@
             <div class="leader-image">
               <div class="image-placeholder">👨‍🏫</div>
             </div>
-            <h3>Dr. Sarah Johnson</h3>
+            <h3>Dr. Rohit Sharma</h3>
+            <p class="leader-title">Director</p>
+            <p>Leading our institution with vision and dedication for over 8 years.</p>
+          </div>
+          <div class="leader-card">
+            <div class="leader-image">
+              <div class="image-placeholder">👨‍🏫</div>
+            </div>
+            <h3>S.M. Raiyan Ahmed.</h3>
             <p class="leader-title">Principal</p>
-            <p>Leading our institution with vision and dedication for over 15 years.</p>
-          </div>
-          <div class="leader-card">
-            <div class="leader-image">
-              <div class="image-placeholder">👩‍🏫</div>
-            </div>
-            <h3>Ms. Maria Rodriguez</h3>
-            <p class="leader-title">Vice Principal</p>
             <p>Overseeing academic programs and student development initiatives.</p>
-          </div>
-          <div class="leader-card">
-            <div class="leader-image">
-              <div class="image-placeholder">👨‍💼</div>
-            </div>
-            <h3>Mr. David Chen</h3>
-            <p class="leader-title">Head of Operations</p>
-            <p>Managing school operations and ensuring smooth daily functioning.</p>
           </div>
         </div>
       </div>
@@ -137,8 +129,15 @@
 </template>
 
 <script>
+import heroImage from '../assets/rscentralschimg.png'
+
 export default {
-  name: 'About'
+  name: 'About',
+  data() {
+    return {
+      heroImage
+    }
+  }
 }
 </script>
 
@@ -160,7 +159,7 @@ export default {
   grid-template-columns: 1fr 1fr;
   gap: 3rem;
   align-items: center;
-  min-height: 400px;
+  min-height: 350px;
 }
 
 .hero-content {
@@ -180,13 +179,22 @@ export default {
   opacity: 0.9;
 }
 
-.hero-placeholder {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 4rem;
+.hero-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.hero-img {
+  max-width: 100%;
+  height: auto;
+  max-height: 300px;
   border-radius: 8px;
-  text-align: center;
-  font-size: 4rem;
-  font-weight: bold;
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes fadeInLeft {
@@ -396,6 +404,10 @@ export default {
 
   .hero-title {
     font-size: 2rem;
+  }
+
+  .hero-img {
+    max-height: 200px;
   }
 
   .mission-content,
