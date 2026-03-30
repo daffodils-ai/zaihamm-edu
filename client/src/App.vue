@@ -14,8 +14,38 @@ import Footer from './components/Footer.vue'
 </template>
 
 <style scoped>
+.app-container {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 .main-content {
-  min-height: calc(100vh - 200px);
+  flex: 1;
   padding: 2rem 0;
+  width: 100%;
+}
+</style>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
 }
 </style>

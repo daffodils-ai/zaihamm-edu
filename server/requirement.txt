@@ -55,3 +55,9 @@ for organization model name would be OrganizationUser, and collection name would
 21. have seperate connectivity with database and expose function connect with mongodb with connection pooling.
 22. no hardcoded values, everything in constants file also business logic should be service.
 23. Create a md file mentioning all the API CURL bash along with response data.
+
+
+
+69ca7a025e32d2076c1714c4
+drrscentral-admin@test.com
+AdminPass@123

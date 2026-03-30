@@ -16,7 +16,7 @@
           <li><router-link to="/facilities" class="nav-link">{{ $t('nav.facilities') }}</router-link></li>
           <li><router-link to="/notices" class="nav-link">{{ $t('nav.notices') }}</router-link></li>
           <li><router-link to="/contact" class="nav-link">{{ $t('nav.contact') }}</router-link></li>
-          <li><router-link to="/admin/login" class="nav-link admin-link">{{ $t('nav.admin') }}</router-link></li>
+          <li><a href="http://localhost:5173/login" class="nav-link admin-link">{{ $t('nav.admin') }}</a></li>
         </ul>
         <div class="language-switcher">
           <button @click="switchLanguage('en')" :class="{ active: $i18n.locale === 'en' }" title="English">EN</button>
