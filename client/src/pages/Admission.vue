@@ -4,9 +4,13 @@
     <section class="hero">
       <div class="hero-content">
         <h1 class="hero-title">Join Our School</h1>
-        <p class="hero-tagline">Begin your journey towards excellence and success</p>
+        <p class="hero-tagline">
+          Begin your journey towards excellence and success
+        </p>
         <div class="hero-buttons">
-          <button class="btn btn-primary" @click="scrollToForm">Apply Now</button>
+          <button class="btn btn-primary" @click="scrollToForm">
+            Apply Now
+          </button>
           <button class="btn btn-secondary">Download Form</button>
         </div>
       </div>
@@ -56,9 +60,13 @@
                 <li><strong>Nursery:</strong> 3-4 years</li>
                 <li><strong>Kindergarten:</strong> 4-5 years</li>
                 <li><strong>Primary (Grades 1-5):</strong> 5-10 years</li>
-                <li><strong>Middle School (Grades 6-8):</strong> 10-13 years</li>
+                <li>
+                  <strong>Middle School (Grades 6-8):</strong> 10-13 years
+                </li>
                 <li><strong>High School (Grades 9-10):</strong> 13-15 years</li>
-                <li><strong>Senior Secondary (Grades 11-12):</strong> 15-17 years</li>
+                <li>
+                  <strong>Senior Secondary (Grades 11-12):</strong> 15-17 years
+                </li>
               </ul>
             </div>
             <div class="info-card">
@@ -160,7 +168,12 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="studentName">Student Full Name *</label>
-                <input v-model="form.studentName" type="text" id="studentName" required />
+                <input
+                  v-model="form.studentName"
+                  type="text"
+                  id="studentName"
+                  required
+                />
               </div>
               <div class="form-group">
                 <label for="dob">Date of Birth *</label>
@@ -203,11 +216,21 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="fatherName">Father's Name *</label>
-                <input v-model="form.fatherName" type="text" id="fatherName" required />
+                <input
+                  v-model="form.fatherName"
+                  type="text"
+                  id="fatherName"
+                  required
+                />
               </div>
               <div class="form-group">
                 <label for="motherName">Mother's Name *</label>
-                <input v-model="form.motherName" type="text" id="motherName" required />
+                <input
+                  v-model="form.motherName"
+                  type="text"
+                  id="motherName"
+                  required
+                />
               </div>
             </div>
 
@@ -221,20 +244,50 @@
                 <input v-model="form.phone" type="tel" id="phone" required />
               </div>
             </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="aadhar">Student's Aadhar id *</label>
+                <input
+                  v-model="form.aadhar"
+                  id="aadhar"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="parentsAadhar">Parent's Aadhar id *</label>
+                <input
+                  v-model="form.parentsAadhar"
+                  id="parentsAadhar"
+                  required
+                />
+              </div>
+            </div>
 
             <div class="form-group full-width">
               <label for="address">Address *</label>
-              <textarea v-model="form.address" id="address" rows="3" required></textarea>
+              <textarea
+                v-model="form.address"  
+                id="address"
+                rows="3"
+                required
+              ></textarea>
             </div>
-
             <div class="form-group full-width">
               <label for="previousSchool">Previous School (if any)</label>
-              <input v-model="form.previousSchool" type="text" id="previousSchool" />
+              <input
+                v-model="form.previousSchool"
+                type="text"
+                id="previousSchool"
+              />
             </div>
 
             <div class="form-actions">
-              <button type="submit" class="submit-btn">Submit Application</button>
-              <button type="button" @click="resetForm" class="reset-btn">Reset Form</button>
+              <button type="submit" class="submit-btn">
+                Submit Application
+              </button>
+              <button type="button" @click="resetForm" class="reset-btn">
+                Reset Form
+              </button>
             </div>
           </form>
         </div>
@@ -248,19 +301,31 @@
         <div class="faq-grid">
           <div class="faq-item">
             <h3>What is the admission fee?</h3>
-            <p>The admission fee varies by grade. Please contact the admission office for detailed fee structure.</p>
+            <p>
+              The admission fee varies by grade. Please contact the admission
+              office for detailed fee structure.
+            </p>
           </div>
           <div class="faq-item">
             <h3>Is there an entrance test for all grades?</h3>
-            <p>Entrance tests are conducted for Grades 1 and above. Nursery and Kindergarten admissions are based on interaction and availability.</p>
+            <p>
+              Entrance tests are conducted for Grades 1 and above. Nursery and
+              Kindergarten admissions are based on interaction and availability.
+            </p>
           </div>
           <div class="faq-item">
             <h3>Can I apply for multiple grades?</h3>
-            <p>Each application is for a specific grade. Multiple applications can be submitted if needed.</p>
+            <p>
+              Each application is for a specific grade. Multiple applications
+              can be submitted if needed.
+            </p>
           </div>
           <div class="faq-item">
             <h3>What is the acceptance rate?</h3>
-            <p>Our acceptance rate varies by grade and availability. We strive to accommodate all eligible candidates.</p>
+            <p>
+              Our acceptance rate varies by grade and availability. We strive to
+              accommodate all eligible candidates.
+            </p>
           </div>
         </div>
       </div>
@@ -270,48 +335,50 @@
 
 <script>
 export default {
-  name: 'Admission',
+  name: "Admission",
   data() {
     return {
       form: {
-        studentName: '',
-        dob: '',
-        grade: '',
-        gender: '',
-        fatherName: '',
-        motherName: '',
-        email: '',
-        phone: '',
-        address: '',
-        previousSchool: ''
-      }
-    }
+        studentName: "",
+        dob: "",
+        grade: "",
+        gender: "",
+        fatherName: "",
+        motherName: "",
+        email: "",
+        phone: "",
+        address: "",
+        previousSchool: "",
+        aadhar: "",
+        parentsAadhar: "",
+      },
+    };
   },
   methods: {
     scrollToForm() {
-      this.$refs.formSection?.scrollIntoView({ behavior: 'smooth' })
+      this.$refs.formSection?.scrollIntoView({ behavior: "smooth" });
     },
     submitApplication() {
       // Handle form submission
-      alert('Application submitted successfully! We will contact you soon.')
-      this.resetForm()
+      alert("Application submitted successfully! We will contact you soon.");
+      this.resetForm();
     },
     resetForm() {
       this.form = {
-        studentName: '',
-        dob: '',
-        grade: '',
-        gender: '',
-        fatherName: '',
-        motherName: '',
-        email: '',
-        phone: '',
-        address: '',
-        previousSchool: ''
-      }
-    }
-  }
-}
+        studentName: "",
+        dob: "",
+        grade: "",
+        gender: "",
+        fatherName: "",
+        motherName: "",
+        email: "",
+        phone: "",
+        address: "",
+        previousSchool: "",
+      };
+    },
+  },
+};
 </script>
 
 <style scoped>

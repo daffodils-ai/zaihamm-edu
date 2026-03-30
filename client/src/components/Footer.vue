@@ -1,11 +1,11 @@
 <template>
   <footer class="footer">
     <div class="footer-container">
-      <p>&copy; 2026 School Portal. All rights reserved.</p>
+      <p>&copy; 2026 Zaihamm Edu. All rights reserved.</p>
       <div class="footer-links">
         <a href="#privacy">Privacy Policy</a>
         <a href="#terms">Terms of Service</a>
-        <a href="#contact">Contact Us</a>
+        <a href="/contact">Contact Us</a>
       </div>
     </div>
   </footer>

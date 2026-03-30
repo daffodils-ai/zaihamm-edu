@@ -3,11 +3,11 @@
     <!-- Hero Section -->
     <section class="hero">
       <div class="hero-content">
-        <h1 class="hero-title">Nurturing Minds, Building Futures</h1>
-        <p class="hero-tagline">Excellence in Education Since 1995</p>
+        <h1 class="hero-title">{{ $t('home.hero.title') }}</h1>
+        <p class="hero-tagline">{{ $t('home.hero.tagline') }}</p>
         <div class="hero-buttons">
-          <button class="btn btn-primary" @click="scrollToAdmission">Apply Now</button>
-          <button class="btn btn-secondary" @click="scrollToHighlights">Explore Programs</button>
+          <button class="btn btn-primary" @click="scrollToAdmission">{{ $t('home.hero.applyNow') }}</button>
+          <button class="btn btn-secondary" @click="scrollToHighlights">{{ $t('home.hero.explorePrograms') }}</button>
         </div>
       </div>
       <div class="hero-image">
@@ -22,25 +22,21 @@
           <div class="image-placeholder">👨‍💼</div>
         </div>
         <div class="welcome-content">
-          <h2>Welcome from Our Principal</h2>
+          <h2>{{ $t('home.welcome.title') }}</h2>
           <p>
-            Dear Students, Parents, and Guardians,
+            {{ $t('home.welcome.greeting') }}
           </p>
           <p>
-            Welcome to our institution dedicated to academic excellence and holistic development. 
-            At our school, we believe in nurturing not just academic brilliance but also building 
-            character, fostering creativity, and developing critical thinking skills in our students.
+            {{ $t('home.welcome.message1') }}
           </p>
           <p>
-            Our commitment to providing world-class education, combined with a supportive community, 
-            ensures that every student reaches their full potential. We pride ourselves on our state-of-the-art 
-            facilities, dedicated faculty, and diverse programs that cater to different learning needs.
+            {{ $t('home.welcome.message2') }}
           </p>
           <p>
-            <strong>Vision:</strong> To be a beacon of educational excellence, nurturing responsible global citizens.
+            <strong>{{ $t('home.welcome.vision') }}</strong>
           </p>
           <p>
-            <strong>Mission:</strong> Empowering students with knowledge, skills, and values for a better tomorrow.
+            <strong>{{ $t('home.welcome.mission') }}</strong>
           </p>
         </div>
       </div>
@@ -48,172 +44,137 @@
 
     <!-- Quick Highlights -->
     <section class="highlights" ref="highlightsSection">
-      <h2>Why Choose Us?</h2>
+      <h2>{{ $t('home.highlights.title') }}</h2>
       <div class="highlights-grid">
         <div class="highlight-card">
           <div class="highlight-icon">👥</div>
           <h3>1000+</h3>
-          <p>Students Enrolled</p>
+          <p>{{ $t('home.highlights.students') }}</p>
         </div>
         <div class="highlight-card">
           <div class="highlight-icon">🏆</div>
-          <h3>25+</h3>
-          <p>Years of Excellence</p>
+          <h3>8+</h3>
+          <p>{{ $t('home.highlights.years') }}</p>
         </div>
         <div class="highlight-card">
           <div class="highlight-icon">🎓</div>
           <h3>95%</h3>
-          <p>Success Rate</p>
+          <p>{{ $t('home.highlights.successRate') }}</p>
         </div>
         <div class="highlight-card">
           <div class="highlight-icon">🌟</div>
-          <h3>50+</h3>
-          <p>National Awards</p>
+          <h3>20+</h3>
+          <p>{{ $t('home.highlights.awards') }}</p>
         </div>
       </div>
 
       <!-- Programs -->
       <div class="programs-section">
-        <h3>Our Programs</h3>
+        <h3>{{ $t('home.programs.title') }}</h3>
         <div class="programs-grid">
           <div class="program-card">
-            <h4>Primary Education</h4>
-            <p>Grades 1-5: Building strong foundational skills with interactive learning</p>
+            <h4>{{ $t('home.programs.kindergarten.title') }}</h4>
+            <p>{{ $t('home.programs.kindergarten.description') }}</p>
           </div>
           <div class="program-card">
-            <h4>Secondary Education</h4>
-            <p>Grades 6-10: Comprehensive curriculum with STEM focus</p>
+            <h4>{{ $t('home.programs.primary.title') }}</h4>
+            <p>{{ $t('home.programs.primary.description') }}</p>
           </div>
           <div class="program-card">
-            <h4>Senior Secondary</h4>
-            <p>Grades 11-12: Advanced courses with career guidance</p>
+            <h4>{{ $t('home.programs.secondary.title') }}</h4>
+            <p>{{ $t('home.programs.secondary.description') }}</p>
           </div>
           <div class="program-card">
-            <h4>Extracurriculars</h4>
-            <p>Sports, arts, music, debate, and cultural activities</p>
+            <h4>{{ $t('home.programs.extracurriculars.title') }}</h4>
+            <p>{{ $t('home.programs.extracurriculars.description') }}</p>
           </div>
         </div>
       </div>
 
       <!-- Facilities -->
       <div class="facilities-section">
-        <h3>Our Facilities</h3>
+        <h3>{{ $t('home.facilities.title') }}</h3>
         <div class="facilities-grid">
-          <div class="facility-item">✨ Smart Classrooms</div>
-          <div class="facility-item">🏃 Sports Complex</div>
-          <div class="facility-item">📚 Advanced Library</div>
-          <div class="facility-item">🔬 Science Labs</div>
-          <div class="facility-item">🖥️ Computer Lab</div>
-          <div class="facility-item">🎭 Auditorium</div>
-          <div class="facility-item">🍽️ Cafeteria</div>
-          <div class="facility-item">🩺 Medical Center</div>
+          <div class="facility-item">✨ {{ $t('home.facilities.smartClassrooms') }}</div>
+          <div class="facility-item">🏃 {{ $t('home.facilities.sportsComplex') }}</div>
+          <div class="facility-item">📚 {{ $t('home.facilities.library') }}</div>
+          <div class="facility-item">🔬 {{ $t('home.facilities.scienceLabs') }}</div>
+          <div class="facility-item">🖥️ {{ $t('home.facilities.computerLab') }}</div>
+          <div class="facility-item">🎭 {{ $t('home.facilities.auditorium') }}</div>
+          <div class="facility-item">🍽️ {{ $t('home.facilities.cafeteria') }}</div>
+          <div class="facility-item">🩺 {{ $t('home.facilities.medicalCenter') }}</div>
         </div>
       </div>
     </section>
 
     <!-- News & Events -->
     <section class="news-events">
-      <h2>News & Events</h2>
+      <h2>{{ $t('home.newsEvents.title') }}</h2>
       <div class="events-grid">
         <div class="event-card">
-          <div class="event-badge">Upcoming</div>
-          <h3>Annual Sports Meet</h3>
-          <p class="event-date">📅 April 15-17, 2026</p>
-          <p>Exciting sports competitions featuring various events for all grades.</p>
+          <div class="event-badge">{{ $t('home.newsEvents.upcoming') }}</div>
+          <h3>{{ $t('home.newsEvents.sportsMeet.title') }}</h3>
+          <p class="event-date">📅 {{ $t('home.newsEvents.sportsMeet.date') }}</p>
+          <p>{{ $t('home.newsEvents.sportsMeet.description') }}</p>
         </div>
         <div class="event-card">
-          <div class="event-badge">Upcoming</div>
-          <h3>Science Exhibition</h3>
-          <p class="event-date">📅 May 1, 2026</p>
-          <p>Students showcase innovative science projects and experiments.</p>
+          <div class="event-badge">{{ $t('home.newsEvents.upcoming') }}</div>
+          <h3>{{ $t('home.newsEvents.scienceExhibition.title') }}</h3>
+          <p class="event-date">📅 {{ $t('home.newsEvents.scienceExhibition.date') }}</p>
+          <p>{{ $t('home.newsEvents.scienceExhibition.description') }}</p>
         </div>
         <div class="event-card">
-          <div class="event-badge">Recent</div>
-          <h3>Debate Competition Win</h3>
-          <p class="event-date">📅 March 20, 2026</p>
-          <p>Our debating team won 1st place in the Regional Competition.</p>
+          <div class="event-badge">{{ $t('home.newsEvents.recent') }}</div>
+          <h3>{{ $t('home.newsEvents.debateWin.title') }}</h3>
+          <p class="event-date">📅 {{ $t('home.newsEvents.debateWin.date') }}</p>
+          <p>{{ $t('home.newsEvents.debateWin.description') }}</p>
         </div>
         <div class="event-card">
-          <div class="event-badge">Recent</div>
-          <h3>Mathematics Olympiad</h3>
-          <p class="event-date">📅 March 10, 2026</p>
-          <p>3 students selected for National Mathematics Olympiad.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Gallery Section -->
-    <section class="gallery">
-      <h2>Campus Life</h2>
-      <div class="gallery-grid">
-        <div class="gallery-item">
-          <div class="gallery-image">🏫</div>
-          <p>Classrooms</p>
-        </div>
-        <div class="gallery-item">
-          <div class="gallery-image">⚽</div>
-          <p>Sports</p>
-        </div>
-        <div class="gallery-item">
-          <div class="gallery-image">🎨</div>
-          <p>Arts & Crafts</p>
-        </div>
-        <div class="gallery-item">
-          <div class="gallery-image">🎵</div>
-          <p>Music Program</p>
-        </div>
-        <div class="gallery-item">
-          <div class="gallery-image">🔬</div>
-          <p>Science Labs</p>
-        </div>
-        <div class="gallery-item">
-          <div class="gallery-image">🎓</div>
-          <p>Graduation</p>
+          <div class="event-badge">{{ $t('home.newsEvents.recent') }}</div>
+          <h3>{{ $t('home.newsEvents.mathOlympiad.title') }}</h3>
+          <p class="event-date">📅 {{ $t('home.newsEvents.mathOlympiad.date') }}</p>
+          <p>{{ $t('home.newsEvents.mathOlympiad.description') }}</p>
         </div>
       </div>
     </section>
 
     <!-- Testimonials -->
     <section class="testimonials">
-      <h2>What Our Community Says</h2>
+      <h2>{{ $t('home.testimonials.title') }}</h2>
       <div class="testimonials-grid">
         <div class="testimonial-card">
           <div class="stars">⭐⭐⭐⭐⭐</div>
           <p class="testimonial-text">
-            "The school has provided my child with an excellent education and safe environment. 
-            The teachers are dedicated and supportive."
+            "{{ $t('home.testimonials.parent.text') }}"
           </p>
-          <p class="testimonial-author">- Mr. Raj Kumar (Parent)</p>
+          <p class="testimonial-author">- {{ $t('home.testimonials.parent.author') }}</p>
         </div>
         <div class="testimonial-card">
           <div class="stars">⭐⭐⭐⭐⭐</div>
           <p class="testimonial-text">
-            "My time here was transformative. I made lifelong friends and learned beyond academics. 
-            The campus is beautiful and facilities are top-notch."
+            "{{ $t('home.testimonials.alumni.text') }}"
           </p>
-          <p class="testimonial-author">- Priya Singh (Alumni)</p>
+          <p class="testimonial-author">- {{ $t('home.testimonials.alumni.author') }}</p>
         </div>
         <div class="testimonial-card">
           <div class="stars">⭐⭐⭐⭐⭐</div>
           <p class="testimonial-text">
-            "The holistic development approach here prepares students for real-world challenges. 
-            Highly recommended!"
+            "{{ $t('home.testimonials.student.text') }}"
           </p>
-          <p class="testimonial-author">- Aisha Patel (Student)</p>
+          <p class="testimonial-author">- {{ $t('home.testimonials.student.author') }}</p>
         </div>
       </div>
     </section>
 
     <!-- CTA Section -->
     <section class="cta-section" ref="admissionSection">
-      <h2>Ready to Join Us?</h2>
-      <p>Take the first step towards excellence. Explore admission options and more.</p>
+      <h2>{{ $t('home.cta.title') }}</h2>
+      <p>{{ $t('home.cta.description') }}</p>
       <div class="cta-buttons">
         <button class="cta-btn primary">
-          <router-link to="/admission">Admissions Open</router-link>
+          <router-link to="/admission">{{ $t('home.cta.admissionsOpen') }}</router-link>
         </button>
-        <button class="cta-btn secondary">Download Prospectus</button>
-        <button class="cta-btn tertiary">Schedule a Visit</button>
+        <button class="cta-btn secondary">{{ $t('home.cta.downloadProspectus') }}</button>
       </div>
     </section>
   </div>
