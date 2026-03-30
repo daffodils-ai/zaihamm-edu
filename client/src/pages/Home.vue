@@ -19,7 +19,9 @@
     <section class="welcome">
       <div class="welcome-container">
         <div class="principal-image">
-          <div class="image-placeholder">👨‍💼</div>
+          <div class="image-placeholder">
+            <img :src="principalImage" alt="Principal" class="principal-img">
+          </div>
         </div>
         <div class="welcome-content">
           <h2>{{ $t('home.welcome.title') }}</h2>
@@ -181,8 +183,15 @@
 </template>
 
 <script>
+import principalImage from '../assets/rohit.png'
+
 export default {
   name: 'Home',
+  data() {
+    return {
+      principalImage
+    }
+  },
   methods: {
     scrollToAdmission() {
       this.$refs.admissionSection?.scrollIntoView({ behavior: 'smooth' })
@@ -322,11 +331,22 @@ export default {
 }
 
 .image-placeholder {
-  font-size: 6rem;
   background: white;
-  padding: 2rem;
+  padding: 1rem;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.principal-img {
+  max-width: 100%;
+  height: auto;
+  max-height: 400px;
+  border-radius: 4px;
+  object-fit: cover;
 }
 
 .welcome-content h2 {
