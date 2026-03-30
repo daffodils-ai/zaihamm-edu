@@ -1,0 +1,37 @@
+can you please implement this frontend folder, I want to build school management with below features.
+
+1. there should be default highly beatifull designed launch page with lots of sections and design should
+be highly responsive and intercative with scrolling and cool animations. UI and UX should be awesome.
+2. All the API call should happend through api.js folder using fetch and dynamically for each api call there should
+be seperate method and there should be url.js file which should contains all API urls.
+3. use vuex store with namespace with modular architecture there should be seperate module for data persist,
+each module should have getters.js, mutations.js, state.js and actions.js and there should be one index.js where all these files joined 
+and on store global level index.js joined with namespace.
+4. service should contains storage service for data persistence so that even on refresh data should not lost.
+5. router should contains all the routes, router guard should also be there before enter.
+6. each page should persist filter data at url query level and there should be button to select filters as per pages, also user should be able to clear filters.
+7. create Login , Signup and Reset password page with OTP and Reset password, page should be highly responsive and beautifull.
+8. Implement all the pages as per the server routes and functionalities.
+9. Form input button and all should be very beautiful.
+10. List screen should must have included paginations, also with filters, default 20 records should be loaded and the page & limit should be peristed at query level in url.
+11. Create reusable component for reusability and maintainability.
+12. List data should be very very beautiful without cell lining and all and also there should be option to select the listed records using checkbox and then there should be 
+vertical 3dot icon somewhere to open as option to delete selected records or make it inactive or something.
+list data should must show toggle is_active field directly to toggle the active or inative status.
+double click on list data should open in new page with populated details with element if user want they can click on edit button and start editing it.
+there should be button to save or cancel. opened page shouldbe with /:id route
+13. there should be refresh icon button to hard refresh the list.
+14. API function should be called from action.js file and then component or page should call action from there.
+mutation should be commited from action, and state should be changed from mutation.
+15. After logging there should be home page with 30% left and 70% right, 30% should show the menu item, and 70% will show the pages accordingly.
+16. All the date should be displayed as LocalDatetime, however when it will send this to update it should go as UTC 00 timezone format.
+17. List should display the required details.
+18. create vue directive to format the date time in (DD/MM/YYYY HH:mm:ss), where hour should be 12 hour format.
+19. You can take all API reference and input from server folders.
+20. You can use icon as much as required to show the page beutifull.
+21. each page should be highly responsive and detailed & very very beutifull with colors.
+22. Page should be very modern and dynamic.
+23. Make sure all the logic as per backend should work seamlesly with UI and UX.
+24. Dashboard Analytics page should be very very beutifull with graph and UI and UX and highly responsive.
+25. use bootstrap for design and if required custom css, make sure one thing for each file there
+should be seperate css design file and one main for common css.
