@@ -1,0 +1,112 @@
+{
+  "nav": {
+    "brand": "Dr. R.S CENTRAL SCHOOL",
+    "tagline": "Nurturing Minds, Building Futures",
+    "home": "Home",
+    "about": "About Us",
+    "admissions": "Admissions",
+    "facilities": "Facilities",
+    "notices": "Notices",
+    "contact": "Contact",
+    "admin": "Admin"
+  },
+  "home": {
+    "hero": {
+      "title": "Nurturing Minds, Building Futures",
+      "tagline": "Excellence in Education Since 2018",
+      "applyNow": "Apply Now",
+      "explorePrograms": "Explore Programs"
+    },
+    "welcome": {
+      "title": "Welcome from Our Director",
+      "greeting": "Dear Students, Parents, and Guardians,",
+      "message1": "Welcome to our institution dedicated to academic excellence and holistic development. At our school, we believe in nurturing not just academic brilliance but also building character, fostering creativity, and developing critical thinking skills in our students.",
+      "message2": "Our commitment to providing world-class education, combined with a supportive community, ensures that every student reaches their full potential. We pride ourselves on our state-of-the-art facilities, dedicated faculty, and diverse programs that cater to different learning needs.",
+      "vision": "Vision: To be a beacon of educational excellence, nurturing responsible global citizens.",
+      "mission": "Mission: Empowering students with knowledge, skills, and values for a better tomorrow."
+    },
+    "highlights": {
+      "title": "Why Choose Us?",
+      "students": "Students Enrolled",
+      "years": "Years of Excellence",
+      "successRate": "Success Rate",
+      "awards": "National Awards"
+    },
+    "programs": {
+      "title": "Our Programs",
+      "kindergarten": {
+        "title": "Primary Education",
+        "description": "Kindergarten: Building a strong foundation for future learning"
+      },
+      "primary": {
+        "title": "Primary Education",
+        "description": "Grades 1-5: Building strong foundational skills with interactive learning"
+      },
+      "secondary": {
+        "title": "Secondary Education",
+        "description": "Grades 6-10: Comprehensive curriculum with STEM focus"
+      },
+      "extracurriculars": {
+        "title": "Extracurriculars",
+        "description": "Sports, arts, music, debate, and cultural activities"
+      }
+    },
+    "facilities": {
+      "title": "Our Facilities",
+      "smartClassrooms": "Smart Classrooms",
+      "sportsComplex": "Sports Complex",
+      "library": "Advanced Library",
+      "scienceLabs": "Science Labs",
+      "computerLab": "Computer Lab",
+      "auditorium": "Auditorium",
+      "cafeteria": "Cafeteria",
+      "medicalCenter": "Medical Center"
+    },
+    "newsEvents": {
+      "title": "News & Events",
+      "sportsMeet": {
+        "title": "Annual Sports Meet",
+        "date": "April 15-17, 2026",
+        "description": "Exciting sports competitions featuring various events for all grades."
+      },
+      "scienceExhibition": {
+        "title": "Science Exhibition",
+        "date": "May 1, 2026",
+        "description": "Students showcase innovative science projects and experiments."
+      },
+      "debateWin": {
+        "title": "Debate Competition Win",
+        "date": "March 20, 2026",
+        "description": "Our debating team won 1st place in the Regional Competition."
+      },
+      "mathOlympiad": {
+        "title": "Mathematics Olympiad",
+        "date": "March 10, 2026",
+        "description": "3 students selected for National Mathematics Olympiad."
+      },
+      "upcoming": "Upcoming",
+      "recent": "Recent"
+    },
+    "testimonials": {
+      "title": "What Our Community Says",
+      "parent": {
+        "text": "The school has provided my child with an excellent education and safe environment. The teachers are dedicated and supportive.",
+        "author": "Mr. Raj Kumar (Parent)"
+      },
+      "alumni": {
+        "text": "My time here was transformative. I made lifelong friends and learned beyond academics. The campus is beautiful and facilities are top-notch.",
+        "author": "Priya Singh (Alumni)"
+      },
+      "student": {
+        "text": "The holistic development approach here prepares students for real-world challenges. Highly recommended!",
+        "author": "Aisha Patel (Student)"
+      }
+    },
+    "cta": {
+      "title": "Ready to Join Us?",
+      "description": "Take the first step towards excellence. Explore admission options and more.",
+      "admissionsOpen": "Admissions Open",
+      "downloadProspectus": "Download Prospectus"
+    }
+  }
+}

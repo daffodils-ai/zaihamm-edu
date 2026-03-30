@@ -4,33 +4,45 @@
       <div class="navbar-brand">
         <div class="brand-logo">🎓</div>
         <div class="brand-text">
-          <h1>School Portal</h1>
-          <span>Nurturing Minds, Building Futures</span>
+          <h1>{{ $t('nav.brand') }}</h1>
+          <span>{{ $t('nav.tagline') }}</span>
         </div>
       </div>
-      <ul class="navbar-menu">
-        <li><router-link to="/" class="nav-link">Home</router-link></li>
-        <li><router-link to="/about" class="nav-link">About Us</router-link></li>
-        <li><router-link to="/admission" class="nav-link">Admissions</router-link></li>
-        <li><router-link to="/facilities" class="nav-link">Facilities</router-link></li>
-        <li><router-link to="/notices" class="nav-link">Notices</router-link></li>
-        <li><router-link to="/contact" class="nav-link">Contact</router-link></li>
-        <li><router-link to="/admin/login" class="nav-link admin-link">Admin</router-link></li>
-      </ul>
-      <div class="mobile-menu-toggle" @click="toggleMobileMenu">
-        <span></span>
-        <span></span>
-        <span></span>
+      <div class="navbar-right">
+        <ul class="navbar-menu">
+          <li><router-link to="/" class="nav-link">{{ $t('nav.home') }}</router-link></li>
+          <li><router-link to="/about" class="nav-link">{{ $t('nav.about') }}</router-link></li>
+          <li><router-link to="/admission" class="nav-link">{{ $t('nav.admissions') }}</router-link></li>
+          <li><router-link to="/facilities" class="nav-link">{{ $t('nav.facilities') }}</router-link></li>
+          <li><router-link to="/notices" class="nav-link">{{ $t('nav.notices') }}</router-link></li>
+          <li><router-link to="/contact" class="nav-link">{{ $t('nav.contact') }}</router-link></li>
+          <li><router-link to="/admin/login" class="nav-link admin-link">{{ $t('nav.admin') }}</router-link></li>
+        </ul>
+        <div class="language-switcher">
+          <button @click="switchLanguage('en')" :class="{ active: $i18n.locale === 'en' }" title="English">EN</button>
+          <span class="separator">|</span>
+          <button @click="switchLanguage('hi')" :class="{ active: $i18n.locale === 'hi' }" title="हिंदी">HI</button>
+        </div>
+        <div class="mobile-menu-toggle" @click="toggleMobileMenu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
       </div>
     </div>
     <div class="mobile-menu" :class="{ active: mobileMenuOpen }">
-      <router-link to="/" @click="closeMobileMenu">Home</router-link>
-      <router-link to="/about" @click="closeMobileMenu">About Us</router-link>
-      <router-link to="/admission" @click="closeMobileMenu">Admissions</router-link>
-      <router-link to="/facilities" @click="closeMobileMenu">Facilities</router-link>
-      <router-link to="/notices" @click="closeMobileMenu">Notices</router-link>
-      <router-link to="/contact" @click="closeMobileMenu">Contact</router-link>
-      <router-link to="/admin/login" @click="closeMobileMenu">Admin</router-link>
+      <div class="mobile-language-switcher">
+        <button @click="switchLanguage('en')" :class="{ active: $i18n.locale === 'en' }" title="English">EN</button>
+        <span class="separator">|</span>
+        <button @click="switchLanguage('hi')" :class="{ active: $i18n.locale === 'hi' }" title="हिंदी">HI</button>
+      </div>
+      <router-link to="/" @click="closeMobileMenu">{{ $t('nav.home') }}</router-link>
+      <router-link to="/about" @click="closeMobileMenu">{{ $t('nav.about') }}</router-link>
+      <router-link to="/admission" @click="closeMobileMenu">{{ $t('nav.admissions') }}</router-link>
+      <router-link to="/facilities" @click="closeMobileMenu">{{ $t('nav.facilities') }}</router-link>
+      <router-link to="/notices" @click="closeMobileMenu">{{ $t('nav.notices') }}</router-link>
+      <router-link to="/contact" @click="closeMobileMenu">{{ $t('nav.contact') }}</router-link>
+      <router-link to="/admin/login" @click="closeMobileMenu">{{ $t('nav.admin') }}</router-link>
     </div>
   </nav>
 </template>
@@ -49,6 +61,9 @@ export default {
     },
     closeMobileMenu() {
       this.mobileMenuOpen = false
+    },
+    switchLanguage(lang) {
+      this.$i18n.locale = lang
     }
   }
 }
@@ -80,6 +95,12 @@ export default {
   color: white;
   min-width: 0;
   flex-shrink: 1;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .brand-logo {
@@ -118,7 +139,7 @@ export default {
 .navbar-menu {
   display: flex;
   list-style: none;
-  gap: 1rem;
+  gap: 0.5rem;
   margin: 0;
   padding: 0;
   flex-shrink: 0;
@@ -128,8 +149,8 @@ export default {
   color: white;
   text-decoration: none;
   font-weight: 500;
-  font-size: 0.75rem;
-  padding: 0.3rem 0.6rem;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.4rem;
   border-radius: 4px;
   transition: all 0.3s ease;
   position: relative;
@@ -188,6 +209,49 @@ export default {
   display: block;
 }
 
+.mobile-language-switcher {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 2rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 0.5rem;
+}
+
+.mobile-language-switcher button {
+  background: transparent;
+  border: none;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.mobile-language-switcher button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  text-decoration: underline;
+}
+
+.mobile-language-switcher button.active {
+  background: rgba(255, 255, 255, 0.15);
+  font-weight: 600;
+}
+
+.mobile-language-switcher .separator {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  margin: 0 0.1rem;
+}
+
+.mobile-language-switcher .separator {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+}
+
 .mobile-menu a {
   display: block;
   color: white;
@@ -203,12 +267,57 @@ export default {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* Language Switcher */
+.language-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  margin-left: 0.5rem;
+}
+
+.language-switcher button {
+  background: transparent;
+  border: none;
+  color: white;
+  padding: 0.15rem 0.3rem;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  min-width: auto;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.language-switcher button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  text-decoration: underline;
+}
+
+.language-switcher button.active {
+  background: rgba(255, 255, 255, 0.12);
+  font-weight: 600;
+}
+
+.language-switcher .separator {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.75rem;
+  margin: 0 0.05rem;
+}
+
 @media (max-width: 768px) {
   .navbar-container {
     padding: 0 1rem;
   }
 
   .navbar-menu {
+    display: none;
+  }
+
+  .language-switcher {
     display: none;
   }
 
