@@ -76,7 +76,6 @@ export class Logger {
         return String(message)
             .replace(/\\/g, "\\\\")
             .replace(/"/g, '\\"')
-            .replace(/\b/g, "\\b")
             .replace(/\f/g, "\\f")
             .replace(/\n/g, "\\n")
             .replace(/\r/g, "\\r")

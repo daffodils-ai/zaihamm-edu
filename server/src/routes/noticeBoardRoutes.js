@@ -12,19 +12,16 @@ router.post('/',
 
 // Get all notices
 router.get('/',
-    authMiddleware,
     NoticeBoardController.getAll.bind(NoticeBoardController)
 );
 
 // Get recent notices
 router.get('/recent',
-    authMiddleware,
     NoticeBoardController.getRecentNotices.bind(NoticeBoardController)
 );
 
 // Get by ID
 router.get('/:id',
-    authMiddleware,
     NoticeBoardController.getById.bind(NoticeBoardController)
 );
 

@@ -76,8 +76,9 @@ class NoticeBoardController {
     async getAll(req, res, next) {
         try {
             const { page = 1, limit = 10, ...filters } = req.query;
+            const organizationId = req.user?.organizationId || null;
             const result = await NoticeBoardService.getAll(
-                req.user.organizationId,
+                organizationId,
                 filters,
                 page,
                 limit
@@ -102,7 +103,8 @@ class NoticeBoardController {
 
     async getRecentNotices(req, res, next) {
         try {
-            const notices = await NoticeBoardService.getRecentNotices(req.user.organizationId);
+            const organizationId = req.user?.organizationId || null;
+            const notices = await NoticeBoardService.getRecentNotices(organizationId);
 
             res.status(HTTP_CODES.OK).json({
                 success: true,

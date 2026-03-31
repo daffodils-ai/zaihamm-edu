@@ -16,7 +16,10 @@ class NoticeBoardRepository {
     async findAll(organizationId, filters = {}, page = 1, limit = 10) {
         const allowedFields = ['title', 'description', 'noticeType'];
         const { fromDate, toDate, ...otherFilters } = filters;
-        const query = { organizationId };
+        const query = {};
+        if (organizationId) {
+            query.organizationId = organizationId;
+        }
         Object.assign(query, buildFilterQuery(otherFilters, allowedFields));
 
         if (fromDate) {
@@ -59,7 +62,12 @@ class NoticeBoardRepository {
     }
 
     async findRecentNotices(organizationId, limit = 5) {
-        return NoticeBoard.find({ organizationId })
+        const query = {};
+        if (organizationId) {
+            query.organizationId = organizationId;
+        }
+
+        return NoticeBoard.find(query)
             .populate('createdBy', 'firstName lastName email')
             .sort({ createdAt: -1 })
             .limit(limit);

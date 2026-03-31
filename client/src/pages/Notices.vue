@@ -19,39 +19,36 @@
           <p>Important notices and updates from school administration</p>
         </div>
 
+        <div v-if="errorMessage" class="error-banner">{{ errorMessage }}</div>
+        <div v-if="loading" class="loading-banner">Loading notices...</div>
+
         <div class="notices-grid">
-          <div v-for="notice in filteredNotices" :key="notice.id" class="notice-card">
+          <div v-for="notice in filteredNotices" :key="notice._id" class="notice-card">
             <div class="notice-header">
               <div class="notice-icon">
-                <span v-if="notice.priority === 'urgent'">🚨</span>
-                <span v-else-if="notice.category === 'academic'">📚</span>
-                <span v-else-if="notice.category === 'event'">🎉</span>
+                <span v-if="notice.noticeType === 'Banner'">🖼️</span>
+                <span v-else-if="notice.noticeType === 'Individual'">👤</span>
                 <span v-else>📢</span>
               </div>
               <div class="notice-meta">
                 <span class="notice-date">{{ notice.date }}</span>
                 <span class="priority-badge">{{ notice.noticeType }}</span>
-                <span v-if="notice.priority === 'urgent'" class="priority-badge urgent">Urgent</span>
-                <span v-else-if="notice.priority === 'important'" class="priority-badge important">Important</span>
               </div>
             </div>
             <h3>{{ notice.title }}</h3>
             <p class="notice-content">{{ notice.content }}</p>
             <p class="notice-content"><strong>Valid:</strong> {{ notice.fromDate }} to {{ notice.toDate }}</p>
-            <div v-if="notice.attachment" class="notice-attachment">
-              <span>📎 {{ notice.attachment }}</span>
-            </div>
           </div>
         </div>
 
-        <!-- Categories Filter -->
+        <!-- Filters -->
         <div class="filter-section">
-          <h3>Filter by Category</h3>
+          <h3>Filter Notices</h3>
           <div class="filter-buttons">
-            <button @click="filterNotices('all')" :class="{ active: activeFilter === 'all' }" class="filter-btn">All</button>
-            <button @click="filterNotices('academic')" :class="{ active: activeFilter === 'academic' }" class="filter-btn">Academic</button>
-            <button @click="filterNotices('event')" :class="{ active: activeFilter === 'event' }" class="filter-btn">Events</button>
-            <button @click="filterNotices('general')" :class="{ active: activeFilter === 'general' }" class="filter-btn">General</button>
+            <button @click="filterNotices('all')" :class="{ active: noticeTypeFilter === 'all' }" class="filter-btn">All</button>
+            <button @click="filterNotices('Individual')" :class="{ active: noticeTypeFilter === 'Individual' }" class="filter-btn">Individual</button>
+            <button @click="filterNotices('Banner')" :class="{ active: noticeTypeFilter === 'Banner' }" class="filter-btn">Banner</button>
+            <button @click="filterNotices('Notice Board')" :class="{ active: noticeTypeFilter === 'Notice Board' }" class="filter-btn">Notice Board</button>
           </div>
           <div class="date-filter-row">
             <input v-model="fromDateFilter" type="date" class="filter-date-input" />
@@ -96,102 +93,66 @@
 </template>
 
 <script>
+import { api } from '../services/api.js'
+
 export default {
   name: 'Notices',
   data() {
     return {
-      activeFilter: 'all',
+      loading: false,
+      errorMessage: '',
+      noticeTypeFilter: 'all',
       fromDateFilter: '',
       toDateFilter: '',
-      notices: [
-        {
-          id: 1,
-          title: 'Summer Break Announcement',
-          date: 'March 15, 2026',
-          content: 'Summer break will commence from June 1st to July 31st. Classes will resume on August 1st, 2026. Please ensure all library books are returned before the break.',
-          category: 'academic',
-          noticeType: 'Notice Board',
-          fromDate: '2026-03-15',
-          toDate: '2026-06-01',
-          priority: 'important',
-          attachment: 'Summer Schedule.pdf'
-        },
-        {
-          id: 2,
-          title: 'Final Exam Schedule Released',
-          date: 'March 10, 2026',
-          content: 'Final exams will be held from May 15th to May 30th. The detailed schedule is now available on the student portal. Please check your exam timetable.',
-          category: 'academic',
-          noticeType: 'Banner',
-          fromDate: '2026-03-10',
-          toDate: '2026-05-30',
-          priority: 'important'
-        },
-        {
-          id: 3,
-          title: 'New Library Hours',
-          date: 'March 5, 2026',
-          content: 'The library will be open from 8 AM to 6 PM starting Monday. Extended hours are available during exam periods.',
-          category: 'general',
-          noticeType: 'Individual',
-          fromDate: '2026-03-05',
-          toDate: '2026-12-31',
-          priority: 'normal'
-        },
-        {
-          id: 4,
-          title: 'Annual Sports Meet 2026',
-          date: 'March 1, 2026',
-          content: 'Registration for Annual Sports Meet is now open. Events include track and field, basketball, volleyball, and more. Last date for registration: March 20, 2026.',
-          category: 'event',
-          noticeType: 'Notice Board',
-          fromDate: '2026-03-01',
-          toDate: '2026-03-20',
-          priority: 'normal'
-        },
-        {
-          id: 5,
-          title: 'Parent-Teacher Meeting',
-          date: 'February 28, 2026',
-          content: 'Parent-Teacher meeting scheduled for April 5th, 2026. Individual appointments will be available from 9 AM to 4 PM.',
-          category: 'event',
-          noticeType: 'Individual',
-          fromDate: '2026-02-28',
-          toDate: '2026-04-05',
-          priority: 'important'
-        },
-        {
-          id: 6,
-          title: 'Emergency: Power Outage',
-          date: 'February 25, 2026',
-          content: 'Due to scheduled maintenance, there will be a brief power outage tomorrow from 10 AM to 12 PM. Classes will be conducted in alternative arrangements.',
-          category: 'general',
-          noticeType: 'Banner',
-          fromDate: '2026-02-25',
-          toDate: '2026-02-26',
-          priority: 'urgent'
-        }
-      ]
+      notices: []
     }
   },
   computed: {
     filteredNotices() {
       return this.notices.filter((notice) => {
-        const categoryMatch = this.activeFilter === 'all' || notice.category === this.activeFilter
+        const typeMatch = this.noticeTypeFilter === 'all' || notice.noticeType === this.noticeTypeFilter
         const fromFilterMatch = !this.fromDateFilter || (notice.fromDate && notice.fromDate >= this.fromDateFilter)
         const toFilterMatch = !this.toDateFilter || (notice.toDate && notice.toDate <= this.toDateFilter)
-        return categoryMatch && fromFilterMatch && toFilterMatch
+        return typeMatch && fromFilterMatch && toFilterMatch
       })
     }
   },
   methods: {
-    filterNotices(category) {
-      this.activeFilter = category
+    async fetchNotices() {
+      this.loading = true
+      this.errorMessage = ''
+      try {
+        const response = await api.getNotices(1, 100)
+        const notices = response.data?.data || []
+        this.notices = notices.map((notice) => ({
+          _id: notice._id,
+          title: notice.title,
+          content: notice.description,
+          noticeType: notice.noticeType || 'Individual',
+          fromDate: notice.fromDate ? String(notice.fromDate).slice(0, 10) : '',
+          toDate: notice.toDate ? String(notice.toDate).slice(0, 10) : '',
+          date: notice.createdAt ? new Date(notice.createdAt).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          }) : ''
+        }))
+      } catch (error) {
+        this.errorMessage = error.response?.data?.message || 'Unable to load notices from DB'
+      } finally {
+        this.loading = false
+      }
+    },
+    filterNotices(type) {
+      this.noticeTypeFilter = type
     },
     clearDateFilter() {
       this.fromDateFilter = ''
       this.toDateFilter = ''
     }
+  },
+  mounted() {
+    this.fetchNotices()
   }
 }
 </script>
@@ -279,6 +240,25 @@ export default {
 .notices-header p {
   color: #666;
   font-size: 1.1rem;
+}
+
+.error-banner,
+.loading-banner {
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.error-banner {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.loading-banner {
+  background: #eff6ff;
+  color: #1e3a8a;
 }
 
 .notices-grid {
