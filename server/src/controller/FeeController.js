@@ -1,6 +1,12 @@
 import FeeService from '../service/FeeService.js';
 import { ApiError } from '../utils/error.js';
-import { ERROR_MESSAGES, SUCCESS_MESSAGES, HTTP_CODES, ALLOWED_ROLES_TO_ADMIT_STUDENT } from '../constants/index.js';
+import {
+    ERROR_MESSAGES,
+    SUCCESS_MESSAGES,
+    HTTP_CODES,
+    ALLOWED_ROLES_TO_ADMIT_STUDENT,
+    FEE_STATUS
+} from '../constants/index.js';
 
 /**
  * Controller for Fee operations
@@ -12,9 +18,13 @@ class FeeController {
                 throw new ApiError(HTTP_CODES.FORBIDDEN, ERROR_MESSAGES.FORBIDDEN);
             }
 
-            const { studentId, studentSessionId, classId, type, amount, dueDate, remarks } = req.body;
+            const { studentId, studentSessionId, classId, type, amount, dueDate, status, remarks } = req.body;
 
             if (!studentId || !studentSessionId || !classId || !type || !amount || !dueDate) {
+                throw new ApiError(HTTP_CODES.BAD_REQUEST, ERROR_MESSAGES.INVALID_REQUEST);
+            }
+
+            if (status && ![FEE_STATUS.PAID, FEE_STATUS.PENDING].includes(status)) {
                 throw new ApiError(HTTP_CODES.BAD_REQUEST, ERROR_MESSAGES.INVALID_REQUEST);
             }
 
@@ -26,6 +36,7 @@ class FeeController {
                 type,
                 amount,
                 dueDate,
+                status: status || FEE_STATUS.PENDING,
                 remarks
             });
 

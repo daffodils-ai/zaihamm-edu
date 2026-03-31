@@ -3,8 +3,8 @@
     <!-- Hero Section -->
     <section class="hero">
       <div class="hero-content">
-        <h1 class="hero-title">{{ $t('home.hero.title') }}</h1>
-        <p class="hero-tagline">{{ $t('home.hero.tagline') }}</p>
+        <h1 class="hero-title text-dark">{{ $t('home.hero.title') }}</h1>
+        <p class="hero-tagline text-dark">{{ $t('home.hero.tagline') }}</p>
         <div class="hero-buttons">
           <button class="btn btn-primary" @click="scrollToAdmission">{{ $t('home.hero.applyNow') }}</button>
           <button class="btn btn-secondary" @click="scrollToHighlights">{{ $t('home.hero.explorePrograms') }}</button>
@@ -216,7 +216,14 @@ export default {
 
 /* Hero Section */
 .hero {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(
+    to right,
+    #FF671F 0%,
+    #FFD6BF 25%,
+    #FFFFFF 50%,
+    #CFE8D9 75%,
+    #046A38 100%
+  );
   color: white;
   padding: 4rem 2rem;
   display: grid;

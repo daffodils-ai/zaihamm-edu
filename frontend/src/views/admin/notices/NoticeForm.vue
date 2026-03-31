@@ -26,7 +26,7 @@
       <div class="card-body">
         <form @submit.prevent="handleSubmit">
           <div class="row g-4">
-            <div class="col-12">
+            <div class="col-md-6">
               <CustomInput
                 v-model="form.title"
                 label="Title"
@@ -34,6 +34,14 @@
                 required
                 :error="errors.title"
               />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Notice Type</label>
+              <select v-model="form.noticeType" class="form-select" required>
+                <option v-for="type in noticeTypeOptions" :key="type" :value="type">
+                  {{ type }}
+                </option>
+              </select>
             </div>
             <div class="col-12">
               <label class="form-label">Description</label>
@@ -44,6 +52,24 @@
                 placeholder="Enter notice description"
                 required
               ></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">From Date</label>
+              <input
+                v-model="form.fromDate"
+                type="date"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">To Date</label>
+              <input
+                v-model="form.toDate"
+                type="date"
+                class="form-control"
+                required
+              />
             </div>
           </div>
           <div class="d-flex gap-2 mt-5">
@@ -68,7 +94,8 @@ export default {
   components: { CustomInput, CustomButton, AlertComponent },
   data() {
     return {
-      form: { title: '', description: '' },
+      form: { title: '', description: '', noticeType: 'Individual', fromDate: '', toDate: '' },
+      noticeTypeOptions: ['Individual', 'Banner', 'Notice Board'],
       errors: {},
       successMessage: '',
       errorMessage: '',
@@ -79,12 +106,42 @@ export default {
     isEditMode() { return !!this.$route.params.id; }
   },
   methods: {
-    ...mapActions('notices', ['createNotice', 'updateNotice']),
+    ...mapActions('notices', {
+      createNotice: 'create',
+      updateNotice: 'update',
+      fetchNoticeById: 'fetchById'
+    }),
     validateForm() {
       this.errors = {};
       if (!this.form.title) this.errors.title = 'Title is required';
       if (!this.form.description) this.errors.description = 'Description is required';
+      if (!this.form.noticeType) this.errors.noticeType = 'Notice type is required';
+      if (!this.form.fromDate) this.errors.fromDate = 'From date is required';
+      if (!this.form.toDate) this.errors.toDate = 'To date is required';
+      if (this.form.fromDate && this.form.toDate && this.form.fromDate > this.form.toDate) {
+        this.errors.toDate = 'To date must be on or after from date';
+      }
       return Object.keys(this.errors).length === 0;
+    },
+    async loadNotice() {
+      try {
+        this.isLoading = true;
+        const response = await this.fetchNoticeById(this.$route.params.id);
+        if (response?.success && response.data) {
+          const notice = response.data;
+          this.form = {
+            title: notice.title || '',
+            description: notice.description || '',
+            noticeType: notice.noticeType || 'Individual',
+            fromDate: notice.fromDate ? String(notice.fromDate).slice(0, 10) : '',
+            toDate: notice.toDate ? String(notice.toDate).slice(0, 10) : ''
+          };
+        }
+      } catch (error) {
+        this.errorMessage = getErrorMessage(error);
+      } finally {
+        this.isLoading = false;
+      }
     },
     async handleSubmit() {
       if (!this.validateForm()) return;
@@ -102,6 +159,11 @@ export default {
       } finally {
         this.isLoading = false;
       }
+    }
+  },
+  mounted() {
+    if (this.isEditMode) {
+      this.loadNotice();
     }
   }
 };

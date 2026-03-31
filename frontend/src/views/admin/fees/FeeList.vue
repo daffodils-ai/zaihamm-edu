@@ -99,7 +99,7 @@
               <td>
                 <div class="btn-group btn-group-sm">
                   <router-link :to="`/admin/fees/${fee._id}/edit`" class="btn btn-outline-warning">✏️</router-link>
-                  <button class="btn btn-outline-danger" @click="deleteFee(fee._id)">🗑️</button>
+                  <button class="btn btn-outline-danger" @click="onDeleteFee(fee._id)">🗑️</button>
                 </div>
               </td>
             </tr>
@@ -107,6 +107,20 @@
         </table>
       </div>
     </div>
+
+    <nav v-if="totalPages > 1" class="mt-4" aria-label="Page navigation">
+      <ul class="pagination justify-content-center">
+        <li :class="['page-item', { disabled: currentPage === 1 }]">
+          <button class="page-link" @click="goToPage(currentPage - 1)">Previous</button>
+        </li>
+        <li v-for="page in totalPages" :key="page" :class="['page-item', { active: page === currentPage }]">
+          <button class="page-link" @click="goToPage(page)">{{ page }}</button>
+        </li>
+        <li :class="['page-item', { disabled: currentPage === totalPages }]">
+          <button class="page-link" @click="goToPage(currentPage + 1)">Next</button>
+        </li>
+      </ul>
+    </nav>
   </div>
 </template>
 
@@ -128,18 +142,34 @@ export default {
         { value: 'paid', label: 'Paid' }
       ],
       successMessage: '',
-      errorMessage: ''
+      errorMessage: '',
+      page: 1,
+      limit: 20
     };
   },
   computed: {
-    ...mapState('fees', ['fees', 'loading']),
-    ...mapGetters('fees', ['isLoading'])
+    ...mapState('fees', ['fees', 'loading', 'pagination']),
+    ...mapGetters('fees', ['isLoading']),
+    currentPage() {
+      return this.pagination?.page || 1;
+    },
+    totalPages() {
+      const pages = this.pagination?.pages;
+      if (pages) return pages;
+      const total = this.pagination?.total || 0;
+      const limit = this.pagination?.limit || this.limit;
+      return Math.max(1, Math.ceil(total / limit));
+    }
   },
   methods: {
-    ...mapActions('fees', ['fetchFees', 'deleteFee']),
+    ...mapActions('fees', {
+      fetchFees: 'fetch',
+      removeFee: 'delete'
+    }),
     async applyFilters() {
       try {
-        await this.fetchFees({ page: 1, limit: 20, filters: this.filters });
+        this.page = 1;
+        await this.fetchFees({ page: this.page, limit: this.limit, filters: this.filters });
       } catch (error) {
         this.errorMessage = getErrorMessage(error);
       }
@@ -149,14 +179,22 @@ export default {
       this.applyFilters();
     },
     async refreshList() {
-      await this.applyFilters();
+      await this.fetchFees({ page: this.page, limit: this.limit, filters: this.filters });
     },
-    async deleteFee(id) {
+    async goToPage(page) {
+      if (page < 1 || page > this.totalPages) return;
+      this.page = page;
+      await this.fetchFees({ page: this.page, limit: this.limit, filters: this.filters });
+    },
+    async onDeleteFee(id) {
       if (!confirm('Are you sure?')) return;
       try {
-        await this.deleteFee(id);
+        await this.removeFee(id);
         this.successMessage = 'Fee deleted';
-        this.refreshList();
+        if (this.fees.length === 1 && this.currentPage > 1) {
+          this.page = this.currentPage - 1;
+        }
+        await this.fetchFees({ page: this.page, limit: this.limit, filters: this.filters });
       } catch (error) {
         this.errorMessage = getErrorMessage(error);
       }

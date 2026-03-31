@@ -87,8 +87,8 @@
               <td class="fw-bold">{{ cls.name }}</td>
               <td>{{ cls.description || '-' }}</td>
               <td>
-                <span :class="['badge', cls.is_active ? 'bg-success' : 'bg-danger']">
-                  {{ cls.is_active ? 'Active' : 'Inactive' }}
+                <span :class="['badge', cls.isActive ? 'bg-success' : 'bg-danger']">
+                  {{ cls.isActive ? 'Active' : 'Inactive' }}
                 </span>
               </td>
               <td>
@@ -102,7 +102,7 @@
                   </router-link>
                   <button
                     class="btn btn-outline-danger"
-                    @click="deleteClass(cls._id)"
+                    @click="onDeleteClass(cls._id)"
                     title="Delete"
                   >
                     🗑️
@@ -172,13 +172,24 @@ export default {
     };
   },
   computed: {
-    ...mapState('classes', ['classes', 'loading']),
-    ...mapGetters('classes', ['isLoading', 'totalPages', 'currentPage']),
+    ...mapState('classes', ['classes', 'loading', 'pagination']),
+    ...mapGetters('classes', ['isLoading']),
+
+    currentPage() {
+      return this.pagination?.page || 1;
+    },
+    totalPages() {
+      const pages = this.pagination?.pages;
+      if (pages) return pages;
+      const total = this.pagination?.total || 0;
+      const limit = this.pagination?.limit || this.limit;
+      return Math.max(1, Math.ceil(total / limit));
+    },
 
     selectedClassesActive() {
       if (this.selectedClasses.length === 0) return true;
       const firstClass = this.classes.find((c) => c._id === this.selectedClasses[0]);
-      return firstClass?.is_active;
+      return firstClass?.isActive;
     }
   },
   watch: {
@@ -191,7 +202,11 @@ export default {
     }
   },
   methods: {
-    ...mapActions('classes', ['fetchClasses', 'updateClass', 'deleteClass']),
+    ...mapActions('classes', {
+      fetchClasses: 'fetch',
+      updateClass: 'update',
+      removeClass: 'delete'
+    }),
 
     async applyFilters() {
       try {
@@ -229,6 +244,7 @@ export default {
     },
 
     async goToPage(page) {
+      if (page < 1 || page > this.totalPages) return;
       await this.fetchClasses({
         page,
         limit: this.limit,
@@ -236,10 +252,10 @@ export default {
       });
     },
 
-    async deleteClass(id) {
+    async onDeleteClass(id) {
       if (!confirm('Are you sure?')) return;
       try {
-        await this.deleteClass(id);
+        await this.removeClass(id);
         this.successMessage = 'Class deleted successfully';
         this.refreshList();
       } catch (error) {
@@ -251,7 +267,7 @@ export default {
       if (!confirm(`Delete ${this.selectedClasses.length} classes?`)) return;
       try {
         for (const id of this.selectedClasses) {
-          await this.deleteClass(id);
+          await this.removeClass(id);
         }
         this.successMessage = 'Classes deleted successfully';
         this.selectedClasses = [];
@@ -269,7 +285,7 @@ export default {
         for (const id of this.selectedClasses) {
           await this.updateClass({
             id,
-            data: { is_active: !this.selectedClassesActive }
+            data: { isActive: !this.selectedClassesActive }
           });
         }
         this.successMessage = `Classes ${action}d successfully`;

@@ -1,6 +1,12 @@
 import NoticeBoardService from '../service/NoticeBoardService.js';
 import { ApiError } from '../utils/error.js';
-import { ERROR_MESSAGES, SUCCESS_MESSAGES, HTTP_CODES, ALLOWED_ROLES_TO_CREATE_NOTICE } from '../constants/index.js';
+import {
+    ERROR_MESSAGES,
+    SUCCESS_MESSAGES,
+    HTTP_CODES,
+    ALLOWED_ROLES_TO_CREATE_NOTICE,
+    NOTICE_TYPES
+} from '../constants/index.js';
 
 /**
  * Controller for NoticeBoard operations
@@ -12,9 +18,20 @@ class NoticeBoardController {
                 throw new ApiError(HTTP_CODES.FORBIDDEN, ERROR_MESSAGES.FORBIDDEN);
             }
 
-            const { title, description, attachments } = req.body;
+            const { title, description, noticeType, fromDate, toDate, attachments } = req.body;
 
-            if (!title || !description) {
+            if (!title || !description || !noticeType || !fromDate || !toDate) {
+                throw new ApiError(HTTP_CODES.BAD_REQUEST, ERROR_MESSAGES.INVALID_REQUEST);
+            }
+
+            if (!Object.values(NOTICE_TYPES).includes(noticeType)) {
+                throw new ApiError(HTTP_CODES.BAD_REQUEST, ERROR_MESSAGES.INVALID_REQUEST);
+            }
+
+            const parsedFromDate = new Date(fromDate);
+            const parsedToDate = new Date(toDate);
+
+            if (Number.isNaN(parsedFromDate.getTime()) || Number.isNaN(parsedToDate.getTime()) || parsedFromDate > parsedToDate) {
                 throw new ApiError(HTTP_CODES.BAD_REQUEST, ERROR_MESSAGES.INVALID_REQUEST);
             }
 
@@ -23,6 +40,9 @@ class NoticeBoardController {
                 createdBy: req.user.id,
                 title,
                 description,
+                noticeType,
+                fromDate: parsedFromDate,
+                toDate: parsedToDate,
                 attachments: attachments || []
             });
 
@@ -98,6 +118,25 @@ class NoticeBoardController {
     async update(req, res, next) {
         try {
             const { id } = req.params;
+            const { noticeType, fromDate, toDate } = req.body;
+
+            if (noticeType && !Object.values(NOTICE_TYPES).includes(noticeType)) {
+                throw new ApiError(HTTP_CODES.BAD_REQUEST, ERROR_MESSAGES.INVALID_REQUEST);
+            }
+
+            if (fromDate || toDate) {
+                const parsedFromDate = fromDate ? new Date(fromDate) : null;
+                const parsedToDate = toDate ? new Date(toDate) : null;
+
+                if ((parsedFromDate && Number.isNaN(parsedFromDate.getTime())) || (parsedToDate && Number.isNaN(parsedToDate.getTime()))) {
+                    throw new ApiError(HTTP_CODES.BAD_REQUEST, ERROR_MESSAGES.INVALID_REQUEST);
+                }
+
+                if (parsedFromDate && parsedToDate && parsedFromDate > parsedToDate) {
+                    throw new ApiError(HTTP_CODES.BAD_REQUEST, ERROR_MESSAGES.INVALID_REQUEST);
+                }
+            }
+
             const notice = await NoticeBoardService.update(id, req.body);
 
             res.status(HTTP_CODES.OK).json({

@@ -47,8 +47,9 @@ export const api = {
   },
 
   // Notices endpoints
-  getNotices() {
-    return apiClient.get('/notices')
+  getNotices(page = 1, limit = 10, filters = {}) {
+    const query = new URLSearchParams({ page, limit, ...filters })
+    return apiClient.get(`/notices?${query.toString()}`)
   },
 
   getNotice(id) {

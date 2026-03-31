@@ -104,12 +104,15 @@ export default {
     }
   },
   methods: {
-    ...mapActions('classes', ['createClass', 'updateClass', 'fetchClassById']),
+    ...mapActions('classes', {
+      createClass: 'create',
+      updateClass: 'update',
+      fetchClassById: 'fetchById'
+    }),
 
     validateForm() {
       this.errors = {};
       if (!this.form.name) this.errors.name = 'Class name is required';
-      if (!this.form.classCode) this.errors.classCode = 'Class code is required';
       return Object.keys(this.errors).length === 0;
     },
 
@@ -146,7 +149,14 @@ export default {
   async mounted() {
     if (this.isEditMode) {
       try {
-        await this.fetchClassById(this.$route.params.id);
+        const response = await this.fetchClassById(this.$route.params.id);
+        if (response?.success && response.data) {
+          this.form = {
+            name: response.data.name || '',
+            classCode: response.data.classCode || '',
+            description: response.data.description || ''
+          };
+        }
       } catch (error) {
         console.error('Error fetching class:', error);
       }

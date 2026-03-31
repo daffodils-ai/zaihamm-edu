@@ -4,8 +4,8 @@
       <div class="navbar-brand">
         <div class="brand-logo">🎓</div>
         <div class="brand-text">
-          <h1>{{ $t('nav.brand') }}</h1>
-          <span>{{ $t('nav.tagline') }}</span>
+          <h1 class="text-dark">{{ $t('nav.brand') }}</h1>
+          <span class="text-dark">{{ $t('nav.tagline') }}</span>
         </div>
       </div>
       <div class="navbar-right">
@@ -71,7 +71,14 @@ export default {
 
 <style scoped>
 .navbar {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(
+    to right,
+    #FF671F 0%,
+    #FFD6BF 25%,
+    #FFFFFF 50%,
+    #CFE8D9 75%,
+    #046A38 100%
+  );
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
@@ -146,7 +153,7 @@ export default {
 }
 
 .nav-link {
-  color: white;
+  color: black;
   text-decoration: none;
   font-weight: 500;
   font-size: 0.7rem;

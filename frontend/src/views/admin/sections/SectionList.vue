@@ -84,11 +84,11 @@
               <td><input type="checkbox" v-model="selectedSections" :value="sec._id" /></td>
               <td class="fw-bold">{{ sec.name }}</td>
               <td>{{ sec.classId?.name || '-' }}</td>
-              <td><span :class="['badge', sec.is_active ? 'bg-success' : 'bg-danger']">{{ sec.is_active ? 'Active' : 'Inactive' }}</span></td>
+              <td><span :class="['badge', sec.isActive ? 'bg-success' : 'bg-danger']">{{ sec.isActive ? 'Active' : 'Inactive' }}</span></td>
               <td>
                 <div class="btn-group btn-group-sm" role="group">
                   <router-link :to="`/admin/sections/${sec._id}/edit`" class="btn btn-outline-warning">✏️</router-link>
-                  <button class="btn btn-outline-danger" @click="deleteSection(sec._id)">🗑️</button>
+                  <button class="btn btn-outline-danger" @click="onDeleteSection(sec._id)">🗑️</button>
                 </div>
               </td>
             </tr>
@@ -96,6 +96,20 @@
         </table>
       </div>
     </div>
+
+    <nav v-if="totalPages > 1" class="mt-4" aria-label="Page navigation">
+      <ul class="pagination justify-content-center">
+        <li :class="['page-item', { disabled: currentPage === 1 }]">
+          <button class="page-link" @click="goToPage(currentPage - 1)">Previous</button>
+        </li>
+        <li v-for="page in totalPages" :key="page" :class="['page-item', { active: page === currentPage }]">
+          <button class="page-link" @click="goToPage(page)">{{ page }}</button>
+        </li>
+        <li :class="['page-item', { disabled: currentPage === totalPages }]">
+          <button class="page-link" @click="goToPage(currentPage + 1)">Next</button>
+        </li>
+      </ul>
+    </nav>
   </div>
 </template>
 
@@ -114,12 +128,24 @@ export default {
       selectedSections: [],
       selectAll: false,
       successMessage: '',
-      errorMessage: ''
+      errorMessage: '',
+      page: 1,
+      limit: 20
     };
   },
   computed: {
-    ...mapState('sections', ['sections', 'loading']),
-    ...mapGetters('sections', ['isLoading'])
+    ...mapState('sections', ['sections', 'loading', 'pagination']),
+    ...mapGetters('sections', ['isLoading']),
+    currentPage() {
+      return this.pagination?.page || 1;
+    },
+    totalPages() {
+      const pages = this.pagination?.pages;
+      if (pages) return pages;
+      const total = this.pagination?.total || 0;
+      const limit = this.pagination?.limit || this.limit;
+      return Math.max(1, Math.ceil(total / limit));
+    }
   },
   watch: {
     selectAll(val) {
@@ -127,10 +153,14 @@ export default {
     }
   },
   methods: {
-    ...mapActions('sections', ['fetchSections', 'updateSection', 'deleteSection']),
+    ...mapActions('sections', {
+      fetchSections: 'fetch',
+      removeSection: 'delete'
+    }),
     async applyFilters() {
       try {
-        await this.fetchSections({ page: 1, limit: 20, filters: this.filters });
+        this.page = 1;
+        await this.fetchSections({ page: this.page, limit: this.limit, filters: this.filters });
       } catch (error) {
         this.errorMessage = getErrorMessage(error);
       }
@@ -140,14 +170,22 @@ export default {
       this.applyFilters();
     },
     async refreshList() {
-      await this.applyFilters();
+      await this.fetchSections({ page: this.page, limit: this.limit, filters: this.filters });
     },
-    async deleteSection(id) {
+    async goToPage(page) {
+      if (page < 1 || page > this.totalPages) return;
+      this.page = page;
+      await this.fetchSections({ page: this.page, limit: this.limit, filters: this.filters });
+    },
+    async onDeleteSection(id) {
       if (!confirm('Are you sure?')) return;
       try {
-        await this.deleteSection(id);
+        await this.removeSection(id);
         this.successMessage = 'Section deleted';
-        this.refreshList();
+        if (this.sections.length === 1 && this.currentPage > 1) {
+          this.page = this.currentPage - 1;
+        }
+        await this.fetchSections({ page: this.page, limit: this.limit, filters: this.filters });
       } catch (error) {
         this.errorMessage = getErrorMessage(error);
       }

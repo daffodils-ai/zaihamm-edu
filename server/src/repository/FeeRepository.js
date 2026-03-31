@@ -11,13 +11,17 @@ class FeeRepository {
     }
 
     async findById(id) {
-        return Fee.findById(id);
+        return Fee.findById(id)
+            .populate('studentId', 'fullName registrationNumber')
+            .populate('classId', 'name classCode');
     }
 
     async findByStudent(studentId, organizationId, page = 1, limit = 10) {
         const pagination = buildPaginationOptions(page, limit);
         const [data, total] = await Promise.all([
             Fee.find({ studentId, organizationId })
+                .populate('studentId', 'fullName registrationNumber')
+                .populate('classId', 'name classCode')
                 .skip(pagination.skip)
                 .limit(pagination.limit)
                 .sort({ dueDate: -1 }),
@@ -35,6 +39,8 @@ class FeeRepository {
         const pagination = buildPaginationOptions(page, limit);
         const [data, total] = await Promise.all([
             Fee.find(query)
+                .populate('studentId', 'fullName registrationNumber')
+                .populate('classId', 'name classCode')
                 .skip(pagination.skip)
                 .limit(pagination.limit)
                 .sort({ dueDate: -1 }),
@@ -49,7 +55,9 @@ class FeeRepository {
             id,
             { ...data, updatedAt: new Date() },
             { new: true, runValidators: true }
-        );
+        )
+            .populate('studentId', 'fullName registrationNumber')
+            .populate('classId', 'name classCode');
     }
 
     async delete(id) {

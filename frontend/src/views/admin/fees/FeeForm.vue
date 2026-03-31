@@ -47,6 +47,26 @@
               />
             </div>
             <div class="col-md-6">
+              <CustomSelect
+                v-model="form.type"
+                label="Fee Type"
+                :options="typeOptions"
+                placeholder="Select fee type"
+                required
+                :error="errors.type"
+              />
+            </div>
+            <div class="col-md-6">
+              <CustomSelect
+                v-model="form.status"
+                label="Status"
+                :options="statusOptions"
+                placeholder="Select status"
+                required
+                :error="errors.status"
+              />
+            </div>
+            <div class="col-md-6">
               <CustomInput
                 v-model="form.amount"
                 label="Amount"
@@ -85,6 +105,7 @@
 
 <script>
 import { mapActions } from 'vuex';
+import { classes, students } from '../../../api/api.js';
 import CustomInput from '../../../components/CustomInput.vue';
 import CustomSelect from '../../../components/CustomSelect.vue';
 import CustomButton from '../../../components/CustomButton.vue';
@@ -96,23 +117,94 @@ export default {
   components: { CustomInput, CustomSelect, CustomButton, AlertComponent },
   data() {
     return {
-      form: { studentId: '', classId: '', amount: '', dueDate: '', remarks: '' },
+      form: {
+        studentId: '',
+        studentSessionId: '',
+        classId: '',
+        type: 'monthly',
+        status: 'pending',
+        amount: '',
+        dueDate: '',
+        remarks: ''
+      },
       errors: {},
       successMessage: '',
       errorMessage: '',
       isLoading: false,
-      studentOptions: [{ value: '1', label: 'Student 1' }],
-      classOptions: [{ value: '1', label: 'Class 10' }]
+      studentOptions: [],
+      classOptions: [],
+      statusOptions: [
+        { value: 'pending', label: 'Pending' },
+        { value: 'paid', label: 'Paid' }
+      ],
+      typeOptions: [
+        { value: 'monthly', label: 'Monthly' },
+        { value: 'yearly', label: 'Yearly' },
+        { value: 'admission', label: 'Admission' },
+        { value: 'exam', label: 'Exam' },
+        { value: 'other', label: 'Other' }
+      ]
     };
   },
   computed: {
     isEditMode() { return !!this.$route.params.id; }
   },
+  watch: {
+    async 'form.studentId'(newValue) {
+      if (!newValue || this.isEditMode) return;
+      try {
+        const response = await students.getLatestSession(newValue);
+        this.form.studentSessionId = response?.data?._id || '';
+      } catch (error) {
+        this.errorMessage = getErrorMessage(error);
+      }
+    }
+  },
   methods: {
-    ...mapActions('fees', ['createFee', 'updateFee']),
+    ...mapActions('fees', {
+      createFee: 'create',
+      updateFee: 'update',
+      fetchFeeById: 'fetchById'
+    }),
+    async loadDropdownData() {
+      const [studentsResponse, classesResponse] = await Promise.all([
+        students.getAll(1, 100),
+        classes.getAll(1, 100)
+      ]);
+
+      this.studentOptions = (studentsResponse?.data || []).map((student) => ({
+        value: student._id,
+        label: student.registrationNumber ? `${student.fullName} (${student.registrationNumber})` : student.fullName
+      }));
+
+      this.classOptions = (classesResponse?.data || []).map((cls) => ({
+        value: cls._id,
+        label: cls.classCode ? `${cls.name} (${cls.classCode})` : cls.name
+      }));
+    },
+    async loadFee() {
+      const response = await this.fetchFeeById(this.$route.params.id);
+      if (response?.success && response.data) {
+        const fee = response.data;
+        this.form = {
+          studentId: fee.studentId?._id || fee.studentId || '',
+          studentSessionId: fee.studentSessionId?._id || fee.studentSessionId || '',
+          classId: fee.classId?._id || fee.classId || '',
+          type: fee.type || 'monthly',
+          status: fee.status || 'pending',
+          amount: fee.amount || '',
+          dueDate: fee.dueDate ? String(fee.dueDate).slice(0, 10) : '',
+          remarks: fee.remarks || ''
+        };
+      }
+    },
     validateForm() {
       this.errors = {};
       if (!this.form.studentId) this.errors.studentId = 'Student is required';
+      if (!this.form.studentSessionId) this.errors.studentId = 'Student session is required';
+      if (!this.form.classId) this.errors.classId = 'Class is required';
+      if (!this.form.type) this.errors.type = 'Fee type is required';
+      if (!this.form.status) this.errors.status = 'Status is required';
       if (!this.form.amount) this.errors.amount = 'Amount is required';
       if (!this.form.dueDate) this.errors.dueDate = 'Due date is required';
       return Object.keys(this.errors).length === 0;
@@ -133,6 +225,19 @@ export default {
       } finally {
         this.isLoading = false;
       }
+    }
+  },
+  async mounted() {
+    try {
+      this.isLoading = true;
+      await this.loadDropdownData();
+      if (this.isEditMode) {
+        await this.loadFee();
+      }
+    } catch (error) {
+      this.errorMessage = getErrorMessage(error);
+    } finally {
+      this.isLoading = false;
     }
   }
 };

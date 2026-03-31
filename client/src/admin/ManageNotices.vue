@@ -42,14 +42,14 @@
                 />
               </div>
               <div class="form-group">
-                <label for="priority">
-                  <i class="bi bi-flag"></i>
-                  Priority Level
+                <label for="noticeType">
+                  <i class="bi bi-card-list"></i>
+                  Notice Type *
                 </label>
-                <select v-model="form.priority" id="priority">
-                  <option value="normal">Normal</option>
-                  <option value="important">Important</option>
-                  <option value="urgent">Urgent</option>
+                <select v-model="form.noticeType" id="noticeType" required>
+                  <option v-for="type in noticeTypeOptions" :key="type" :value="type">
+                    {{ type }}
+                  </option>
                 </select>
               </div>
             </div>
@@ -70,31 +70,25 @@
 
             <div class="form-row">
               <div class="form-group">
-                <label for="category">
-                  <i class="bi bi-folder"></i>
-                  Category
+                <label for="fromDate">
+                  <i class="bi bi-calendar-event"></i>
+                  From Date *
                 </label>
-                <select v-model="form.category" id="category">
-                  <option value="general">General</option>
-                  <option value="academic">Academic</option>
-                  <option value="events">Events</option>
-                  <option value="holidays">Holidays</option>
-                  <option value="exams">Exams</option>
-                </select>
+                <input v-model="form.fromDate" type="date" id="fromDate" required />
               </div>
               <div class="form-group">
-                <label for="expiryDate">
-                  <i class="bi bi-calendar-x"></i>
-                  Expiry Date (Optional)
+                <label for="toDate">
+                  <i class="bi bi-calendar2-check"></i>
+                  To Date *
                 </label>
-                <input v-model="form.expiryDate" type="date" id="expiryDate" />
+                <input v-model="form.toDate" type="date" id="toDate" required />
               </div>
             </div>
 
             <div class="form-actions">
-              <button type="submit" class="save-btn">
+              <button type="submit" class="save-btn" :disabled="saving">
                 <i class="bi bi-check-circle"></i>
-                {{ editingId ? 'Update Notice' : 'Create Notice' }}
+                {{ saving ? 'Saving...' : (editingId ? 'Update Notice' : 'Create Notice') }}
               </button>
               <button type="button" @click="cancelEdit" class="cancel-btn">
                 <i class="bi bi-x-circle"></i>
@@ -109,43 +103,61 @@
     <!-- Notices List Section -->
     <section class="notices-section">
       <div class="container">
+        <div v-if="errorMessage" class="status-message error-message">{{ errorMessage }}</div>
+        <div v-if="successMessage" class="status-message success-message">{{ successMessage }}</div>
+
         <div class="section-header">
           <h2>All Notices</h2>
           <div class="notices-stats">
             <span class="stat-item">
               <i class="bi bi-file-earmark-text"></i>
-              {{ notices.length }} Total
-            </span>
-            <span class="stat-item">
-              <i class="bi bi-flag-fill text-warning"></i>
-              {{ notices.filter(n => n.priority === 'urgent').length }} Urgent
+              {{ pagination.total }} Total
             </span>
           </div>
         </div>
 
-        <div class="notices-grid">
+        <div class="filters-row">
+          <div class="form-group">
+            <label for="filterNoticeType">Notice Type</label>
+            <select id="filterNoticeType" v-model="filters.noticeType">
+              <option value="">All</option>
+              <option v-for="type in noticeTypeOptions" :key="type" :value="type">{{ type }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filterFromDate">From Date</label>
+            <input id="filterFromDate" v-model="filters.fromDate" type="date" />
+          </div>
+          <div class="form-group">
+            <label for="filterToDate">To Date</label>
+            <input id="filterToDate" v-model="filters.toDate" type="date" />
+          </div>
+          <div class="filter-actions">
+            <button class="pagination-btn" @click="applyFilters" :disabled="loading">Apply Filter</button>
+            <button class="pagination-btn" @click="clearFilters" :disabled="loading">Clear</button>
+          </div>
+        </div>
+
+        <div v-if="loading" class="loading-state">Loading notices...</div>
+
+        <div v-else-if="notices.length > 0" class="notices-grid">
           <div
             v-for="notice in notices"
-            :key="notice.id"
+            :key="notice._id"
             class="notice-card"
-            :class="`priority-${notice.priority || 'normal'}`"
           >
             <div class="notice-header">
               <div class="notice-meta">
-                <span class="priority-badge" :class="`priority-${notice.priority || 'normal'}`">
-                  <i class="bi bi-flag"></i>
-                  {{ (notice.priority || 'normal').charAt(0).toUpperCase() + (notice.priority || 'normal').slice(1) }}
-                </span>
                 <span class="category-badge">
-                  <i class="bi bi-folder"></i>
-                  {{ (notice.category || 'general').charAt(0).toUpperCase() + (notice.category || 'general').slice(1) }}
+                  <i class="bi bi-card-list"></i>
+                  {{ notice.noticeType }}
                 </span>
               </div>
               <div class="notice-actions">
                 <button @click="editNotice(notice)" class="edit-btn" title="Edit">
                   <i class="bi bi-pencil"></i>
                 </button>
-                <button @click="deleteNotice(notice.id)" class="delete-btn" title="Delete">
+                <button @click="deleteNotice(notice._id)" class="delete-btn" title="Delete">
                   <i class="bi bi-trash"></i>
                 </button>
               </div>
@@ -153,23 +165,23 @@
 
             <div class="notice-content">
               <h3>{{ notice.title }}</h3>
-              <p>{{ notice.content }}</p>
+              <p>{{ notice.description }}</p>
             </div>
 
             <div class="notice-footer">
               <span class="notice-date">
                 <i class="bi bi-calendar"></i>
-                {{ formatDate(notice.date) }}
+                {{ formatDate(notice.createdAt) }}
               </span>
-              <span v-if="notice.expiryDate" class="notice-expiry">
-                <i class="bi bi-calendar-x"></i>
-                Expires: {{ formatDate(notice.expiryDate) }}
+              <span class="notice-expiry">
+                <i class="bi bi-calendar-range"></i>
+                {{ formatDate(notice.fromDate) }} - {{ formatDate(notice.toDate) }}
               </span>
             </div>
           </div>
         </div>
 
-        <div v-if="notices.length === 0" class="empty-state">
+        <div v-else class="empty-state">
           <div class="empty-icon">📢</div>
           <h3>No notices yet</h3>
           <p>Create your first notice to get started</p>
@@ -178,85 +190,162 @@
             Create First Notice
           </button>
         </div>
+
+        <div v-if="totalPages > 1" class="pagination-wrapper">
+          <button class="pagination-btn" :disabled="currentPage === 1 || loading" @click="changePage(currentPage - 1)">
+            Previous
+          </button>
+          <span class="pagination-info">Page {{ currentPage }} of {{ totalPages }}</span>
+          <button class="pagination-btn" :disabled="currentPage === totalPages || loading" @click="changePage(currentPage + 1)">
+            Next
+          </button>
+        </div>
       </div>
     </section>
   </div>
 </template>
 
 <script>
+import { api } from '../services/api.js'
+
 export default {
   name: 'ManageNotices',
   data() {
     return {
-      notices: [
-        {
-          id: 1,
-          title: 'Summer Break Announcement',
-          content: 'Summer break will start from June 1st, 2026. All students are advised to complete their assignments before the break begins.',
-          date: '2026-03-15',
-          priority: 'important',
-          category: 'holidays'
-        },
-        {
-          id: 2,
-          title: 'Final Exam Schedule',
-          content: 'Final examinations are scheduled to begin from May 15th, 2026. Please check the detailed schedule on the notice board.',
-          date: '2026-03-10',
-          priority: 'urgent',
-          category: 'exams'
-        }
-      ],
+      notices: [],
+      noticeTypeOptions: ['Individual', 'Banner', 'Notice Board'],
       showForm: false,
       editingId: null,
+      loading: false,
+      saving: false,
+      successMessage: '',
+      errorMessage: '',
+      currentPage: 1,
+      limit: 10,
+      pagination: {
+        total: 0,
+        pages: 1
+      },
+      filters: {
+        noticeType: '',
+        fromDate: '',
+        toDate: ''
+      },
       form: {
         title: '',
         content: '',
-        priority: 'normal',
-        category: 'general',
-        expiryDate: ''
+        noticeType: 'Individual',
+        fromDate: '',
+        toDate: ''
       }
     }
   },
+  computed: {
+    totalPages() {
+      return this.pagination.pages || 1
+    }
+  },
   methods: {
-    saveNotice() {
-      if (this.editingId) {
-        const notice = this.notices.find(n => n.id === this.editingId)
-        if (notice) {
-          notice.title = this.form.title
-          notice.content = this.form.content
-          notice.priority = this.form.priority
-          notice.category = this.form.category
-          notice.expiryDate = this.form.expiryDate
-          notice.date = new Date().toISOString().split('T')[0]
+    async fetchNotices() {
+      this.loading = true
+      this.errorMessage = ''
+      try {
+        const activeFilters = {
+          ...(this.filters.noticeType ? { noticeType: this.filters.noticeType } : {}),
+          ...(this.filters.fromDate ? { fromDate: this.filters.fromDate } : {}),
+          ...(this.filters.toDate ? { toDate: this.filters.toDate } : {})
         }
-      } else {
-        this.notices.push({
-          id: Date.now(),
-          title: this.form.title,
-          content: this.form.content,
-          priority: this.form.priority,
-          category: this.form.category,
-          expiryDate: this.form.expiryDate,
-          date: new Date().toISOString().split('T')[0]
-        })
+        const response = await api.getNotices(this.currentPage, this.limit, activeFilters)
+        this.notices = response.data?.data || []
+        this.pagination = response.data?.pagination || { total: 0, pages: 1 }
+      } catch (error) {
+        this.errorMessage = error.response?.data?.message || 'Failed to load notices'
+      } finally {
+        this.loading = false
       }
-      this.cancelEdit()
+    },
+    async saveNotice() {
+      this.saving = true
+      this.errorMessage = ''
+      this.successMessage = ''
+      try {
+        if (!this.form.fromDate || !this.form.toDate || this.form.fromDate > this.form.toDate) {
+          this.errorMessage = 'Please select a valid date range'
+          this.saving = false
+          return
+        }
+
+        const payload = {
+          title: this.form.title.trim(),
+          description: this.form.content.trim(),
+          noticeType: this.form.noticeType,
+          fromDate: this.form.fromDate,
+          toDate: this.form.toDate
+        }
+
+        if (this.editingId) {
+          await api.updateNotice(this.editingId, payload)
+          this.successMessage = 'Notice updated successfully'
+        } else {
+          await api.createNotice(payload)
+          this.successMessage = 'Notice created successfully'
+          this.currentPage = 1
+        }
+
+        this.cancelEdit()
+        await this.fetchNotices()
+      } catch (error) {
+        this.errorMessage = error.response?.data?.message || 'Failed to save notice'
+      } finally {
+        this.saving = false
+      }
     },
     editNotice(notice) {
-      this.editingId = notice.id
+      this.editingId = notice._id
       this.form = {
         title: notice.title,
-        content: notice.content,
-        priority: notice.priority || 'normal',
-        category: notice.category || 'general',
-        expiryDate: notice.expiryDate || ''
+        content: notice.description,
+        noticeType: notice.noticeType || 'Individual',
+        fromDate: notice.fromDate ? notice.fromDate.slice(0, 10) : '',
+        toDate: notice.toDate ? notice.toDate.slice(0, 10) : ''
       }
       this.showForm = true
     },
-    deleteNotice(id) {
+    async deleteNotice(id) {
       if (confirm('Are you sure you want to delete this notice?')) {
-        this.notices = this.notices.filter(n => n.id !== id)
+        try {
+          this.errorMessage = ''
+          this.successMessage = ''
+          await api.deleteNotice(id)
+          this.successMessage = 'Notice deleted successfully'
+
+          if (this.notices.length === 1 && this.currentPage > 1) {
+            this.currentPage -= 1
+          }
+
+          await this.fetchNotices()
+        } catch (error) {
+          this.errorMessage = error.response?.data?.message || 'Failed to delete notice'
+        }
       }
+    },
+    async changePage(page) {
+      if (page < 1 || page > this.totalPages || page === this.currentPage) return
+      this.currentPage = page
+      await this.fetchNotices()
+    },
+    async applyFilters() {
+      this.currentPage = 1
+      await this.fetchNotices()
+    },
+    async clearFilters() {
+      this.filters = {
+        noticeType: '',
+        fromDate: '',
+        toDate: ''
+      }
+      this.currentPage = 1
+      await this.fetchNotices()
     },
     cancelEdit() {
       this.showForm = false
@@ -264,12 +353,13 @@ export default {
       this.form = {
         title: '',
         content: '',
-        priority: 'normal',
-        category: 'general',
-        expiryDate: ''
+        noticeType: 'Individual',
+        fromDate: '',
+        toDate: ''
       }
     },
     formatDate(dateString) {
+      if (!dateString) return '-'
       const date = new Date(dateString)
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
@@ -277,6 +367,9 @@ export default {
         day: 'numeric'
       })
     }
+  },
+  mounted() {
+    this.fetchNotices()
   }
 }
 </script>
@@ -548,6 +641,46 @@ export default {
   color: #f59e0b !important;
 }
 
+.status-message {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.success-message {
+  background-color: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.error-message {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.loading-state {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.filters-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: end;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .notices-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -713,6 +846,34 @@ export default {
   margin-bottom: 2rem;
 }
 
+.pagination-wrapper {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pagination-btn {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  color: #374151;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  color: #4b5563;
+  font-weight: 600;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .hero {
@@ -742,6 +903,10 @@ export default {
   }
 
   .notices-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filters-row {
     grid-template-columns: 1fr;
   }
 

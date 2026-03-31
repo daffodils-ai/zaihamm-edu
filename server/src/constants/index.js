@@ -112,3 +112,9 @@ export const ALLOWED_ROLES_TO_CREATE_NOTICE = [
     ROLES.TEACHER,
     ROLES.STAFF
 ];
+
+export const NOTICE_TYPES = {
+    INDIVIDUAL: 'Individual',
+    BANNER: 'Banner',
+    NOTICE_BOARD: 'Notice Board'
+};

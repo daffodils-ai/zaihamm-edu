@@ -14,9 +14,24 @@ class NoticeBoardRepository {
     }
 
     async findAll(organizationId, filters = {}, page = 1, limit = 10) {
-        const allowedFields = ['title', 'description'];
+        const allowedFields = ['title', 'description', 'noticeType'];
+        const { fromDate, toDate, ...otherFilters } = filters;
         const query = { organizationId };
-        Object.assign(query, buildFilterQuery(filters, allowedFields));
+        Object.assign(query, buildFilterQuery(otherFilters, allowedFields));
+
+        if (fromDate) {
+            const parsedFromDate = new Date(fromDate);
+            if (!Number.isNaN(parsedFromDate.getTime())) {
+                query.fromDate = { ...(query.fromDate || {}), $gte: parsedFromDate };
+            }
+        }
+
+        if (toDate) {
+            const parsedToDate = new Date(toDate);
+            if (!Number.isNaN(parsedToDate.getTime())) {
+                query.toDate = { ...(query.toDate || {}), $lte: parsedToDate };
+            }
+        }
 
         const pagination = buildPaginationOptions(page, limit);
         const [data, total] = await Promise.all([

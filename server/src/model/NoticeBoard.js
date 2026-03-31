@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { NOTICE_TYPES } from '../constants/index.js';
 
 const noticeBoardSchema = new mongoose.Schema({
     organizationId: {
@@ -18,6 +19,19 @@ const noticeBoardSchema = new mongoose.Schema({
     },
     description: {
         type: String,
+        required: true
+    },
+    noticeType: {
+        type: String,
+        enum: Object.values(NOTICE_TYPES),
+        required: true
+    },
+    fromDate: {
+        type: Date,
+        required: true
+    },
+    toDate: {
+        type: Date,
         required: true
     },
     attachments: [String],

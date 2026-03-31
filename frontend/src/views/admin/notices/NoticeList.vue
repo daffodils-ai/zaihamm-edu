@@ -30,15 +30,29 @@
     <div class="card mb-4">
       <div class="card-body">
         <div class="row g-3">
-          <div class="col-md-8">
+          <div class="col-md-3">
             <CustomInput
               v-model="filters.title"
               label="Search by Title"
               placeholder="Enter notice title"
-              @blur="applyFilters"
             />
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
+            <label class="form-label">Notice Type</label>
+            <select v-model="filters.noticeType" class="form-select">
+              <option value="">All Types</option>
+              <option v-for="type in noticeTypeOptions" :key="type" :value="type">{{ type }}</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">From Date</label>
+            <input v-model="filters.fromDate" type="date" class="form-control" />
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">To Date</label>
+            <input v-model="filters.toDate" type="date" class="form-control" />
+          </div>
+          <div class="col-md-2">
             <div class="d-flex gap-2 mt-4">
               <button class="btn btn-secondary" @click="clearFilters">Clear</button>
               <button class="btn btn-primary" @click="applyFilters">
@@ -73,6 +87,9 @@
           <thead>
             <tr>
               <th>Title</th>
+              <th>Notice Type</th>
+              <th>From Date</th>
+              <th>To Date</th>
               <th>Description</th>
               <th>Created Date</th>
               <th>Actions</th>
@@ -81,12 +98,15 @@
           <tbody>
             <tr v-for="notice in notices" :key="notice._id">
               <td class="fw-bold">{{ notice.title }}</td>
+              <td>{{ notice.noticeType || '-' }}</td>
+              <td v-format-date="notice.fromDate"></td>
+              <td v-format-date="notice.toDate"></td>
               <td><small>{{ notice.description?.substring(0, 50) }}...</small></td>
               <td v-format-date="notice.createdAt"></td>
               <td>
                 <div class="btn-group btn-group-sm">
                   <router-link :to="`/admin/notices/${notice._id}/edit`" class="btn btn-outline-warning">✏️</router-link>
-                  <button class="btn btn-outline-danger" @click="deleteNotice(notice._id)">🗑️</button>
+                  <button class="btn btn-outline-danger" @click="onDeleteNotice(notice._id)">🗑️</button>
                 </div>
               </td>
             </tr>
@@ -94,6 +114,20 @@
         </table>
       </div>
     </div>
+
+    <nav v-if="totalPages > 1" class="mt-4" aria-label="Page navigation">
+      <ul class="pagination justify-content-center">
+        <li :class="['page-item', { disabled: currentPage === 1 }]">
+          <button class="page-link" @click="goToPage(currentPage - 1)">Previous</button>
+        </li>
+        <li v-for="page in totalPages" :key="page" :class="['page-item', { active: page === currentPage }]">
+          <button class="page-link" @click="goToPage(page)">{{ page }}</button>
+        </li>
+        <li :class="['page-item', { disabled: currentPage === totalPages }]">
+          <button class="page-link" @click="goToPage(currentPage + 1)">Next</button>
+        </li>
+      </ul>
+    </nav>
   </div>
 </template>
 
@@ -108,37 +142,66 @@ export default {
   components: { CustomInput, AlertComponent },
   data() {
     return {
-      filters: { title: '' },
+      noticeTypeOptions: ['Individual', 'Banner', 'Notice Board'],
+      filters: { title: '', noticeType: '', fromDate: '', toDate: '' },
       successMessage: '',
-      errorMessage: ''
+      errorMessage: '',
+      page: 1,
+      limit: 20
     };
   },
   computed: {
-    ...mapState('notices', ['notices', 'loading']),
-    ...mapGetters('notices', ['isLoading'])
+    ...mapState('notices', ['notices', 'loading', 'pagination']),
+    ...mapGetters('notices', ['isLoading']),
+    currentPage() {
+      return this.pagination?.page || 1;
+    },
+    totalPages() {
+      const pages = this.pagination?.pages;
+      if (pages) return pages;
+      const total = this.pagination?.total || 0;
+      const limit = this.pagination?.limit || this.limit;
+      return Math.max(1, Math.ceil(total / limit));
+    }
   },
   methods: {
-    ...mapActions('notices', ['fetchNotices', 'deleteNotice']),
+    ...mapActions('notices', {
+      fetchNotices: 'fetch',
+      removeNotice: 'delete'
+    }),
     async applyFilters() {
       try {
-        await this.fetchNotices({ page: 1, limit: 20, filters: this.filters });
+        if (this.filters.fromDate && this.filters.toDate && this.filters.fromDate > this.filters.toDate) {
+          this.errorMessage = 'From Date cannot be after To Date';
+          return;
+        }
+        this.page = 1;
+        await this.fetchNotices({ page: this.page, limit: this.limit, filters: this.filters });
       } catch (error) {
         this.errorMessage = getErrorMessage(error);
       }
     },
     clearFilters() {
-      this.filters = { title: '' };
+      this.filters = { title: '', noticeType: '', fromDate: '', toDate: '' };
       this.applyFilters();
     },
     async refreshList() {
-      await this.applyFilters();
+      await this.fetchNotices({ page: this.page, limit: this.limit, filters: this.filters });
     },
-    async deleteNotice(id) {
+    async goToPage(page) {
+      if (page < 1 || page > this.totalPages || page === this.currentPage) return;
+      this.page = page;
+      await this.fetchNotices({ page: this.page, limit: this.limit, filters: this.filters });
+    },
+    async onDeleteNotice(id) {
       if (!confirm('Are you sure?')) return;
       try {
-        await this.deleteNotice(id);
+        await this.removeNotice(id);
         this.successMessage = 'Notice deleted';
-        this.refreshList();
+        if (this.notices.length === 1 && this.currentPage > 1) {
+          this.page = this.currentPage - 1;
+        }
+        await this.fetchNotices({ page: this.page, limit: this.limit, filters: this.filters });
       } catch (error) {
         this.errorMessage = getErrorMessage(error);
       }

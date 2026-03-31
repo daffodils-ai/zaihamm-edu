@@ -65,6 +65,7 @@
 
 <script>
 import { mapActions } from 'vuex';
+import { classes } from '../../../api/api.js';
 import CustomInput from '../../../components/CustomInput.vue';
 import CustomSelect from '../../../components/CustomSelect.vue';
 import CustomButton from '../../../components/CustomButton.vue';
@@ -81,14 +82,35 @@ export default {
       successMessage: '',
       errorMessage: '',
       isLoading: false,
-      classOptions: [{ value: '1', label: 'Class 10' }]
+      classOptions: []
     };
   },
   computed: {
     isEditMode() { return !!this.$route.params.id; }
   },
   methods: {
-    ...mapActions('sections', ['createSection', 'updateSection']),
+    ...mapActions('sections', {
+      createSection: 'create',
+      updateSection: 'update',
+      fetchSectionById: 'fetchById'
+    }),
+    async loadClassOptions() {
+      const response = await classes.getAll(1, 100);
+      this.classOptions = (response?.data || []).map((item) => ({
+        value: item._id,
+        label: item.classCode ? `${item.name} (${item.classCode})` : item.name
+      }));
+    },
+    async loadSection() {
+      const response = await this.fetchSectionById(this.$route.params.id);
+      if (response?.success && response.data) {
+        this.form = {
+          name: response.data.name || '',
+          classId: response.data.classId?._id || response.data.classId || '',
+          description: response.data.description || ''
+        };
+      }
+    },
     validateForm() {
       this.errors = {};
       if (!this.form.name) this.errors.name = 'Section name is required';
@@ -111,6 +133,19 @@ export default {
       } finally {
         this.isLoading = false;
       }
+    }
+  },
+  async mounted() {
+    try {
+      this.isLoading = true;
+      await this.loadClassOptions();
+      if (this.isEditMode) {
+        await this.loadSection();
+      }
+    } catch (error) {
+      this.errorMessage = getErrorMessage(error);
+    } finally {
+      this.isLoading = false;
     }
   }
 };

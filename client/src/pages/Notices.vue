@@ -20,7 +20,7 @@
         </div>
 
         <div class="notices-grid">
-          <div v-for="notice in notices" :key="notice.id" class="notice-card">
+          <div v-for="notice in filteredNotices" :key="notice.id" class="notice-card">
             <div class="notice-header">
               <div class="notice-icon">
                 <span v-if="notice.priority === 'urgent'">🚨</span>
@@ -30,12 +30,14 @@
               </div>
               <div class="notice-meta">
                 <span class="notice-date">{{ notice.date }}</span>
+                <span class="priority-badge">{{ notice.noticeType }}</span>
                 <span v-if="notice.priority === 'urgent'" class="priority-badge urgent">Urgent</span>
                 <span v-else-if="notice.priority === 'important'" class="priority-badge important">Important</span>
               </div>
             </div>
             <h3>{{ notice.title }}</h3>
             <p class="notice-content">{{ notice.content }}</p>
+            <p class="notice-content"><strong>Valid:</strong> {{ notice.fromDate }} to {{ notice.toDate }}</p>
             <div v-if="notice.attachment" class="notice-attachment">
               <span>📎 {{ notice.attachment }}</span>
             </div>
@@ -50,6 +52,11 @@
             <button @click="filterNotices('academic')" :class="{ active: activeFilter === 'academic' }" class="filter-btn">Academic</button>
             <button @click="filterNotices('event')" :class="{ active: activeFilter === 'event' }" class="filter-btn">Events</button>
             <button @click="filterNotices('general')" :class="{ active: activeFilter === 'general' }" class="filter-btn">General</button>
+          </div>
+          <div class="date-filter-row">
+            <input v-model="fromDateFilter" type="date" class="filter-date-input" />
+            <input v-model="toDateFilter" type="date" class="filter-date-input" />
+            <button @click="clearDateFilter" class="filter-btn">Clear Date</button>
           </div>
         </div>
       </div>
@@ -94,6 +101,8 @@ export default {
   data() {
     return {
       activeFilter: 'all',
+      fromDateFilter: '',
+      toDateFilter: '',
       notices: [
         {
           id: 1,
@@ -101,6 +110,9 @@ export default {
           date: 'March 15, 2026',
           content: 'Summer break will commence from June 1st to July 31st. Classes will resume on August 1st, 2026. Please ensure all library books are returned before the break.',
           category: 'academic',
+          noticeType: 'Notice Board',
+          fromDate: '2026-03-15',
+          toDate: '2026-06-01',
           priority: 'important',
           attachment: 'Summer Schedule.pdf'
         },
@@ -110,6 +122,9 @@ export default {
           date: 'March 10, 2026',
           content: 'Final exams will be held from May 15th to May 30th. The detailed schedule is now available on the student portal. Please check your exam timetable.',
           category: 'academic',
+          noticeType: 'Banner',
+          fromDate: '2026-03-10',
+          toDate: '2026-05-30',
           priority: 'important'
         },
         {
@@ -118,6 +133,9 @@ export default {
           date: 'March 5, 2026',
           content: 'The library will be open from 8 AM to 6 PM starting Monday. Extended hours are available during exam periods.',
           category: 'general',
+          noticeType: 'Individual',
+          fromDate: '2026-03-05',
+          toDate: '2026-12-31',
           priority: 'normal'
         },
         {
@@ -126,6 +144,9 @@ export default {
           date: 'March 1, 2026',
           content: 'Registration for Annual Sports Meet is now open. Events include track and field, basketball, volleyball, and more. Last date for registration: March 20, 2026.',
           category: 'event',
+          noticeType: 'Notice Board',
+          fromDate: '2026-03-01',
+          toDate: '2026-03-20',
           priority: 'normal'
         },
         {
@@ -134,6 +155,9 @@ export default {
           date: 'February 28, 2026',
           content: 'Parent-Teacher meeting scheduled for April 5th, 2026. Individual appointments will be available from 9 AM to 4 PM.',
           category: 'event',
+          noticeType: 'Individual',
+          fromDate: '2026-02-28',
+          toDate: '2026-04-05',
           priority: 'important'
         },
         {
@@ -142,6 +166,9 @@ export default {
           date: 'February 25, 2026',
           content: 'Due to scheduled maintenance, there will be a brief power outage tomorrow from 10 AM to 12 PM. Classes will be conducted in alternative arrangements.',
           category: 'general',
+          noticeType: 'Banner',
+          fromDate: '2026-02-25',
+          toDate: '2026-02-26',
           priority: 'urgent'
         }
       ]
@@ -149,15 +176,21 @@ export default {
   },
   computed: {
     filteredNotices() {
-      if (this.activeFilter === 'all') {
-        return this.notices
-      }
-      return this.notices.filter(notice => notice.category === this.activeFilter)
+      return this.notices.filter((notice) => {
+        const categoryMatch = this.activeFilter === 'all' || notice.category === this.activeFilter
+        const fromFilterMatch = !this.fromDateFilter || (notice.fromDate && notice.fromDate >= this.fromDateFilter)
+        const toFilterMatch = !this.toDateFilter || (notice.toDate && notice.toDate <= this.toDateFilter)
+        return categoryMatch && fromFilterMatch && toFilterMatch
+      })
     }
   },
   methods: {
     filterNotices(category) {
       this.activeFilter = category
+    },
+    clearDateFilter() {
+      this.fromDateFilter = ''
+      this.toDateFilter = ''
     }
   }
 }
@@ -348,6 +381,21 @@ export default {
   flex-wrap: wrap;
 }
 
+.date-filter-row {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.filter-date-input {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.55rem 0.75rem;
+  background: #fff;
+}
+
 .filter-btn {
   padding: 0.75rem 1.5rem;
   border: 2px solid #667eea;
@@ -438,6 +486,10 @@ export default {
   }
 
   .filter-buttons {
+    flex-direction: column;
+  }
+
+  .date-filter-row {
     flex-direction: column;
   }
 

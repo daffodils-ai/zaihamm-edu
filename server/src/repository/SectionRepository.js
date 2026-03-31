@@ -10,7 +10,7 @@ class SectionRepository {
     }
 
     async findById(id) {
-        return Section.findById(id);
+        return Section.findById(id).populate('classId', 'name classCode');
     }
 
     async findByClass(classId, filters = {}, page = 1, limit = 10) {
@@ -21,6 +21,7 @@ class SectionRepository {
         const pagination = buildPaginationOptions(page, limit);
         const [data, total] = await Promise.all([
             Section.find(query)
+                .populate('classId', 'name classCode')
                 .skip(pagination.skip)
                 .limit(pagination.limit)
                 .sort({ createdAt: -1 }),
@@ -38,6 +39,7 @@ class SectionRepository {
         const pagination = buildPaginationOptions(page, limit);
         const [data, total] = await Promise.all([
             Section.find(query)
+                .populate('classId', 'name classCode')
                 .skip(pagination.skip)
                 .limit(pagination.limit)
                 .sort({ createdAt: -1 }),
@@ -52,7 +54,7 @@ class SectionRepository {
             id,
             { ...data, updatedAt: new Date() },
             { new: true, runValidators: true }
-        );
+        ).populate('classId', 'name classCode');
     }
 
     async delete(id) {
