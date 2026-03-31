@@ -200,6 +200,21 @@ export const menus = {
 };
 
 // =====================
+// Admission Tracker APIs
+// =====================
+
+export const admissions = {
+  create: (admissionData) => post('/admissions', admissionData),
+  getAll: (page = 1, limit = 10, filters = {}) => {
+    const query = new URLSearchParams({ page, limit, ...filters });
+    return get(`/admissions?${query}`);
+  },
+  getById: (id) => get(`/admissions/${id}`),
+  update: (id, admissionData) => put(`/admissions/${id}`, admissionData),
+  delete: (id) => deleteRequest(`/admissions/${id}`),
+};
+
+// =====================
 // Notice Board APIs
 // =====================
 

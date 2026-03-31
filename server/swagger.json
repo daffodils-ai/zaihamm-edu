@@ -220,6 +220,65 @@
             "type": "object"
           }
         }
+      },
+      "AdmissionTracker": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "age": {
+            "type": "integer"
+          },
+          "bloodGroup": {
+            "type": "string"
+          },
+          "mobile": {
+            "type": "string"
+          },
+          "parentMobile": {
+            "type": "string"
+          },
+          "studentEmail": {
+            "type": "string"
+          },
+          "parentEmail": {
+            "type": "string"
+          },
+          "fatherName": {
+            "type": "string"
+          },
+          "motherName": {
+            "type": "string"
+          },
+          "guardianName": {
+            "type": "string"
+          },
+          "aadharNo": {
+            "type": "string"
+          },
+          "parentAadharNumber": {
+            "type": "string"
+          },
+          "parentAadharRelation": {
+            "type": "string",
+            "enum": ["father", "mother", "brother", "sister", "other"]
+          },
+          "fullAddress": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
       }
     }
   },
@@ -2313,6 +2372,357 @@
         "responses": {
           "200": {
             "description": "Combined report with admission and fee data"
+          }
+        }
+      }
+    },
+    "/api/v1/admissions": {
+      "post": {
+        "tags": ["Admission Tracker"],
+        "summary": "Create a new admission entry",
+        "operationId": "createAdmission",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fullName": {
+                    "type": "string",
+                    "description": "Full name of the student"
+                  },
+                  "age": {
+                    "type": "integer",
+                    "description": "Age of the student",
+                    "minimum": 0,
+                    "maximum": 150
+                  },
+                  "bloodGroup": {
+                    "type": "string",
+                    "description": "Blood group"
+                  },
+                  "mobile": {
+                    "type": "string",
+                    "description": "Student's mobile number"
+                  },
+                  "parentMobile": {
+                    "type": "string",
+                    "description": "Parent's mobile number (required)"
+                  },
+                  "studentEmail": {
+                    "type": "string",
+                    "description": "Student's email address"
+                  },
+                  "parentEmail": {
+                    "type": "string",
+                    "description": "Parent's email address"
+                  },
+                  "fatherName": {
+                    "type": "string",
+                    "description": "Father's name (required)"
+                  },
+                  "motherName": {
+                    "type": "string",
+                    "description": "Mother's name (required)"
+                  },
+                  "guardianName": {
+                    "type": "string",
+                    "description": "Guardian's name"
+                  },
+                  "aadharNo": {
+                    "type": "string",
+                    "description": "Student's Aadhar number (required, unique)"
+                  },
+                  "parentAadharNumber": {
+                    "type": "string",
+                    "description": "Parent's Aadhar number (required)"
+                  },
+                  "parentAadharRelation": {
+                    "type": "string",
+                    "enum": ["father", "mother", "brother", "sister", "other"],
+                    "description": "Parent's relation to the student in Aadhar (required)"
+                  },
+                  "fullAddress": {
+                    "type": "string",
+                    "description": "Full address (required)"
+                  }
+                },
+                "required": [
+                  "fullName",
+                  "age",
+                  "parentMobile",
+                  "fatherName",
+                  "motherName",
+                  "aadharNo",
+                  "parentAadharNumber",
+                  "parentAadharRelation",
+                  "fullAddress"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Admission entry created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Admission Tracker"],
+        "summary": "Get all admission entries",
+        "operationId": "getAllAdmissions",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "Page number for pagination"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "Number of items per page"
+          },
+          {
+            "name": "fullName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by student's full name"
+          },
+          {
+            "name": "fatherName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by father's name"
+          },
+          {
+            "name": "motherName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by mother's name"
+          },
+          {
+            "name": "aadharNo",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by Aadhar number"
+          },
+          {
+            "name": "parentMobile",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by parent's mobile"
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Filter by creation date (from)"
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Filter by creation date (to)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of admission entries with pagination",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admissions/{id}": {
+      "get": {
+        "tags": ["Admission Tracker"],
+        "summary": "Get admission entry by ID",
+        "operationId": "getAdmissionById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Admission entry ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admission entry details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Admission entry not found"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Admission Tracker"],
+        "summary": "Update admission entry",
+        "operationId": "updateAdmission",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Admission entry ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fullName": {
+                    "type": "string"
+                  },
+                  "age": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 150
+                  },
+                  "bloodGroup": {
+                    "type": "string"
+                  },
+                  "mobile": {
+                    "type": "string"
+                  },
+                  "parentMobile": {
+                    "type": "string"
+                  },
+                  "studentEmail": {
+                    "type": "string"
+                  },
+                  "parentEmail": {
+                    "type": "string"
+                  },
+                  "fatherName": {
+                    "type": "string"
+                  },
+                  "motherName": {
+                    "type": "string"
+                  },
+                  "guardianName": {
+                    "type": "string"
+                  },
+                  "parentAadharNumber": {
+                    "type": "string"
+                  },
+                  "parentAadharRelation": {
+                    "type": "string",
+                    "enum": ["father", "mother", "brother", "sister", "other"]
+                  },
+                  "fullAddress": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Admission entry updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data"
+          },
+          "404": {
+            "description": "Admission entry not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Admission Tracker"],
+        "summary": "Delete admission entry",
+        "operationId": "deleteAdmission",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Admission entry ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admission entry deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Admission entry not found"
           }
         }
       }

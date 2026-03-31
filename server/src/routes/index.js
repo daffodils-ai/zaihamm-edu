@@ -10,6 +10,7 @@ import notificationRoutes from './notificationRoutes.js';
 import feeRoutes from './feeRoutes.js';
 import dashboardRoutes from './dashboardRoutes.js';
 import reportRoutes from './reportRoutes.js';
+import admissionTrackerRoutes from './admissionTrackerRoutes.js';
 
 const router = express.Router();
 
@@ -25,6 +26,7 @@ router.use('/api/v1/notifications', notificationRoutes);
 router.use('/api/v1/fees', feeRoutes);
 router.use('/api/v1/dashboard', dashboardRoutes);
 router.use('/api/v1/reports', reportRoutes);
+router.use('/api/v1/admissions', admissionTrackerRoutes);
 
 // Health check endpoint
 router.get('/api/v1/health', (req, res) => {

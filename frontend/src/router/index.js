@@ -17,6 +17,8 @@ const ClassForm = () => import('../views/admin/classes/ClassForm.vue');
 const ClassDetail = () => import('../views/admin/classes/ClassDetail.vue');
 const SectionList = () => import('../views/admin/sections/SectionList.vue');
 const SectionForm = () => import('../views/admin/sections/SectionForm.vue');
+const AdmissionList = () => import('../views/admin/admissions/AdmissionList.vue');
+const AdmissionForm = () => import('../views/admin/admissions/AdmissionForm.vue');
 const NoticeList = () => import('../views/admin/notices/NoticeList.vue');
 const NoticeForm = () => import('../views/admin/notices/NoticeForm.vue');
 const FeeList = () => import('../views/admin/fees/FeeList.vue');
@@ -140,6 +142,26 @@ const routes = [
         name: 'SectionEdit',
         component: SectionForm,
         meta: { title: 'Edit Section' }
+      },
+
+      // Admissions
+      {
+        path: 'admissions',
+        name: 'AdmissionList',
+        component: AdmissionList,
+        meta: { title: 'Admissions' }
+      },
+      {
+        path: 'admissions/new',
+        name: 'AdmissionNew',
+        component: AdmissionForm,
+        meta: { title: 'Add Admission' }
+      },
+      {
+        path: 'admissions/:id/edit',
+        name: 'AdmissionEdit',
+        component: AdmissionForm,
+        meta: { title: 'Edit Admission' }
       },
 
       // Notices

@@ -48,6 +48,14 @@
             <i class="icon">📋</i>
             <span>Sections</span>
           </router-link>
+          <router-link
+            to="/admin/admissions"
+            class="nav-link"
+            :class="{ active: $route.path.includes('/admissions') }"
+          >
+            <i class="icon">📝</i>
+            <span>Admissions</span>
+          </router-link>
         </div>
 
         <div class="nav-section">

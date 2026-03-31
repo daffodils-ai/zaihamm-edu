@@ -4,6 +4,7 @@ import auth from './modules/auth/index.js';
 import students from './modules/students/index.js';
 import classes from './modules/classes/index.js';
 import sections from './modules/sections/index.js';
+import admissions from './modules/admissions/index.js';
 import notices from './modules/notices/index.js';
 import fees from './modules/fees/index.js';
 import organizationUsers from './modules/organizationUsers/index.js';
@@ -15,6 +16,7 @@ const store = createStore({
     students,
     classes,
     sections,
+    admissions,
     notices,
     fees,
     organizationUsers,
