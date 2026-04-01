@@ -11,10 +11,28 @@ const studentSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    gender: {
+        type: String,
+        enum: ['male', 'female', 'other'],
+        trim: true
+    },
+    dateOfBirth: {
+        type: Date
+    },
     class: {
         type: String,
         required: true,
         trim: true
+    },
+    classId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'class',
+        default: null
+    },
+    sectionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'section',
+        default: null
     },
     bloodGroup: {
         type: String,
@@ -69,6 +87,10 @@ const studentSchema = new mongoose.Schema({
     fullAddress: {
         type: String,
         required: true
+    },
+    previousSchool: {
+        type: String,
+        trim: true
     },
     createdAt: {
         type: Date,

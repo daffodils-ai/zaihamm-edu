@@ -19,7 +19,7 @@ const studentSessionSchema = new mongoose.Schema({
     sectionId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'section',
-        required: true
+        default: null
     },
     year: {
         type: Number,

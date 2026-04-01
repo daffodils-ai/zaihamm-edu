@@ -10,7 +10,9 @@ class AdmissionTrackerRepository {
     }
 
     async findById(id) {
-        return AdmissionTracker.findById(id);
+        return AdmissionTracker.findById(id)
+            .populate('classId', 'name classCode')
+            .populate('sectionId', 'name');
     }
 
     async findAll(filters = {}, page = 1, limit = 10) {
@@ -37,6 +39,8 @@ class AdmissionTrackerRepository {
         const pagination = buildPaginationOptions(page, limit);
         const [data, total] = await Promise.all([
             AdmissionTracker.find(query)
+                .populate('classId', 'name classCode')
+                .populate('sectionId', 'name')
                 .skip(pagination.skip)
                 .limit(pagination.limit)
                 .sort({ createdAt: -1 }),
@@ -51,7 +55,9 @@ class AdmissionTrackerRepository {
             id,
             { ...data, updatedAt: new Date() },
             { new: true, runValidators: true }
-        );
+        )
+            .populate('classId', 'name classCode')
+            .populate('sectionId', 'name');
     }
 
     async delete(id) {

@@ -16,6 +16,11 @@ const studentSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    gender: {
+        type: String,
+        enum: ['male', 'female', 'other'],
+        trim: true
+    },
     bloodGroup: {
         type: String,
         trim: true

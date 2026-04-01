@@ -22,6 +22,11 @@ const feeSchema = new mongoose.Schema({
         ref: 'class',
         required: true
     },
+    sectionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'section',
+        default: null
+    },
     type: {
         type: String,
         enum: Object.values(FEE_TYPES),

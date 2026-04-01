@@ -167,12 +167,41 @@ class StudentService {
      */
     async updateStudent(id, data) {
         try {
-            const student = await StudentRepository.update(id, data);
+            const {
+                classId,
+                sectionId,
+                year,
+                ...studentData
+            } = data;
+
+            const student = await StudentRepository.update(id, studentData);
             if (!student) {
                 throw new ApiError(HTTP_CODES.NOT_FOUND, ERROR_MESSAGES.STUDENT_NOT_FOUND);
             }
+
+            if (classId && year) {
+                const latestSession = await StudentSessionRepository.findLatestByStudent(id);
+
+                if (latestSession) {
+                    await StudentSessionRepository.update(latestSession._id, {
+                        classId,
+                        sectionId: sectionId || null,
+                        year
+                    });
+                } else {
+                    await this.createStudentSession({
+                        organizationId: student.organizationId,
+                        studentId: student._id,
+                        classId,
+                        sectionId: sectionId || null,
+                        year,
+                        registrationNumber: student.registrationNumber
+                    });
+                }
+            }
+
             Logger.log(`Student updated: ${id}`, Logger.Level.INFO);
-            return student;
+            return await this.getStudentById(id);
         } catch (error) {
             Logger.log(`Error updating student: ${error.message}`, Logger.Level.ERROR);
             throw error;

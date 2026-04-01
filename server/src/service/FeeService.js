@@ -115,6 +115,7 @@ class FeeService {
                         studentId: session.studentId,
                         studentSessionId: session._id,
                         classId: session.classId,
+                        sectionId: session.sectionId || null,
                         type: FEE_TYPES.MONTHLY,
                         amount,
                         dueDate,

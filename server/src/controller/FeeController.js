@@ -18,7 +18,7 @@ class FeeController {
                 throw new ApiError(HTTP_CODES.FORBIDDEN, ERROR_MESSAGES.FORBIDDEN);
             }
 
-            const { studentId, studentSessionId, classId, type, amount, dueDate, status, remarks } = req.body;
+            const { studentId, studentSessionId, classId, sectionId, type, amount, dueDate, status, remarks } = req.body;
 
             if (!studentId || !studentSessionId || !classId || !type || !amount || !dueDate) {
                 throw new ApiError(HTTP_CODES.BAD_REQUEST, ERROR_MESSAGES.INVALID_REQUEST);
@@ -33,6 +33,7 @@ class FeeController {
                 studentId,
                 studentSessionId,
                 classId,
+                sectionId: sectionId || null,
                 type,
                 amount,
                 dueDate,

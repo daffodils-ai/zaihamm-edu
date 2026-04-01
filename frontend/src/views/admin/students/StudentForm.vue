@@ -80,6 +80,15 @@
               />
             </div>
             <div class="col-md-6">
+              <CustomSelect
+                v-model="form.gender"
+                label="Gender"
+                :options="genderOptions"
+                placeholder="Select gender"
+                :error="errors.gender"
+              />
+            </div>
+            <div class="col-md-6">
               <CustomInput
                 v-model="form.bloodGroup"
                 label="Blood Group"
@@ -214,6 +223,7 @@ export default {
         aadharNo: '',
         parentAadharNumber: '',
         parentAadharRelation: '',
+        gender: '',
         bloodGroup: '',
         fatherName: '',
         motherName: '',
@@ -236,6 +246,11 @@ export default {
         { value: 'mother', label: 'Mother' },
         { value: 'brother', label: 'Brother' },
         { value: 'sister', label: 'Sister' },
+        { value: 'other', label: 'Other' }
+      ],
+      genderOptions: [
+        { value: 'male', label: 'Male' },
+        { value: 'female', label: 'Female' },
         { value: 'other', label: 'Other' }
       ]
     };
@@ -273,6 +288,30 @@ export default {
   },
   methods: {
     ...mapActions('students', ['createStudent', 'updateStudent', 'fetchStudentById']),
+
+    populateForm(student) {
+      const latestSession = student?.latestSession || {};
+      this.form = {
+        fullName: student?.fullName || '',
+        age: student?.age || '',
+        studentEmail: student?.studentEmail || '',
+        mobile: student?.mobile || '',
+        aadharNo: student?.aadharNo || '',
+        parentAadharNumber: student?.parentAadharNumber || '',
+        parentAadharRelation: student?.parentAadharRelation || '',
+        gender: student?.gender || '',
+        bloodGroup: student?.bloodGroup || '',
+        fatherName: student?.fatherName || '',
+        motherName: student?.motherName || '',
+        guardianName: student?.guardianName || '',
+        parentEmail: student?.parentEmail || '',
+        parentMobile: student?.parentMobile || '',
+        fullAddress: student?.fullAddress || '',
+        classId: student?.class?._id || latestSession?.classId?._id || latestSession?.classId || '',
+        sectionId: student?.section?._id || latestSession?.sectionId?._id || latestSession?.sectionId || '',
+        year: student?.year || latestSession?.year || new Date().getFullYear()
+      };
+    },
 
     async loadDropdownData() {
       const [classesResponse, sectionsResponse] = await Promise.all([
@@ -323,6 +362,7 @@ export default {
       if (!this.form.parentAadharRelation) {
         this.errors.parentAadharRelation = 'Parent Aadhar relation is required';
       }
+      if (!this.form.gender) this.errors.gender = 'Gender is required';
       if (!this.form.fullAddress) this.errors.fullAddress = 'Full address is required';
       if (!this.form.classId) this.errors.classId = 'Class is required';
       if (!this.form.sectionId) this.errors.sectionId = 'Section is required';
@@ -365,8 +405,10 @@ export default {
       await this.loadDropdownData();
 
       if (this.isEditMode) {
-        await this.fetchStudentById(this.$route.params.id);
-        // Populate form with fetched data
+        const response = await this.fetchStudentById(this.$route.params.id);
+        if (response?.success && response.data) {
+          this.populateForm(response.data);
+        }
       }
     } catch (error) {
       this.errorMessage = getErrorMessage(error);

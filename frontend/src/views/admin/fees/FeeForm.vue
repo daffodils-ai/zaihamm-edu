@@ -48,6 +48,15 @@
             </div>
             <div class="col-md-6">
               <CustomSelect
+                v-model="form.sectionId"
+                label="Section"
+                :options="sectionOptions"
+                placeholder="Select section (optional)"
+                :error="errors.sectionId"
+              />
+            </div>
+            <div class="col-md-6">
+              <CustomSelect
                 v-model="form.type"
                 label="Fee Type"
                 :options="typeOptions"
@@ -105,7 +114,7 @@
 
 <script>
 import { mapActions } from 'vuex';
-import { classes, students } from '../../../api/api.js';
+import { classes, students, sections } from '../../../api/api.js';
 import CustomInput from '../../../components/CustomInput.vue';
 import CustomSelect from '../../../components/CustomSelect.vue';
 import CustomButton from '../../../components/CustomButton.vue';
@@ -121,6 +130,7 @@ export default {
         studentId: '',
         studentSessionId: '',
         classId: '',
+        sectionId: '',
         type: 'monthly',
         status: 'pending',
         amount: '',
@@ -133,6 +143,7 @@ export default {
       isLoading: false,
       studentOptions: [],
       classOptions: [],
+      allSections: [],
       statusOptions: [
         { value: 'pending', label: 'Pending' },
         { value: 'paid', label: 'Paid' }
@@ -147,7 +158,17 @@ export default {
     };
   },
   computed: {
-    isEditMode() { return !!this.$route.params.id; }
+    isEditMode() { return !!this.$route.params.id; },
+    sectionOptions() {
+      const items = this.form.classId
+        ? this.allSections.filter((section) => section.classId === this.form.classId)
+        : this.allSections;
+
+      return items.map((section) => ({
+        value: section._id,
+        label: section.className ? `${section.name} (${section.className})` : section.name
+      }));
+    }
   },
   watch: {
     async 'form.studentId'(newValue) {
@@ -155,8 +176,24 @@ export default {
       try {
         const response = await students.getLatestSession(newValue);
         this.form.studentSessionId = response?.data?._id || '';
+        this.form.classId = response?.data?.classId?._id || response?.data?.classId || this.form.classId;
+        this.form.sectionId = response?.data?.sectionId?._id || response?.data?.sectionId || '';
       } catch (error) {
         this.errorMessage = getErrorMessage(error);
+      }
+    },
+    'form.classId'(newValue) {
+      if (!newValue) {
+        this.form.sectionId = '';
+        return;
+      }
+
+      const validSection = this.allSections.some(
+        (section) => section._id === this.form.sectionId && section.classId === newValue
+      );
+
+      if (!validSection) {
+        this.form.sectionId = '';
       }
     }
   },
@@ -167,9 +204,10 @@ export default {
       fetchFeeById: 'fetchById'
     }),
     async loadDropdownData() {
-      const [studentsResponse, classesResponse] = await Promise.all([
+      const [studentsResponse, classesResponse, sectionsResponse] = await Promise.all([
         students.getAll(1, 100),
-        classes.getAll(1, 100)
+        classes.getAll(1, 100),
+        sections.getAll(1, 200)
       ]);
 
       this.studentOptions = (studentsResponse?.data || []).map((student) => ({
@@ -177,9 +215,17 @@ export default {
         label: student.registrationNumber ? `${student.fullName} (${student.registrationNumber})` : student.fullName
       }));
 
-      this.classOptions = (classesResponse?.data || []).map((cls) => ({
+      const classData = classesResponse?.data || [];
+      this.classOptions = classData.map((cls) => ({
         value: cls._id,
         label: cls.classCode ? `${cls.name} (${cls.classCode})` : cls.name
+      }));
+
+      const classMap = Object.fromEntries(classData.map((item) => [item._id, item.name]));
+      this.allSections = (sectionsResponse?.data || []).map((item) => ({
+        ...item,
+        classId: item.classId?._id || item.classId,
+        className: classMap[item.classId?._id || item.classId] || ''
       }));
     },
     async loadFee() {
@@ -190,6 +236,7 @@ export default {
           studentId: fee.studentId?._id || fee.studentId || '',
           studentSessionId: fee.studentSessionId?._id || fee.studentSessionId || '',
           classId: fee.classId?._id || fee.classId || '',
+          sectionId: fee.sectionId?._id || fee.sectionId || '',
           type: fee.type || 'monthly',
           status: fee.status || 'pending',
           amount: fee.amount || '',

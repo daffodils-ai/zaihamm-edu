@@ -13,7 +13,8 @@ class FeeRepository {
     async findById(id) {
         return Fee.findById(id)
             .populate('studentId', 'fullName registrationNumber')
-            .populate('classId', 'name classCode');
+            .populate('classId', 'name classCode')
+            .populate('sectionId', 'name');
     }
 
     async findByStudent(studentId, organizationId, page = 1, limit = 10) {
@@ -22,6 +23,7 @@ class FeeRepository {
             Fee.find({ studentId, organizationId })
                 .populate('studentId', 'fullName registrationNumber')
                 .populate('classId', 'name classCode')
+                .populate('sectionId', 'name')
                 .skip(pagination.skip)
                 .limit(pagination.limit)
                 .sort({ dueDate: -1 }),
@@ -32,7 +34,7 @@ class FeeRepository {
     }
 
     async findAll(organizationId, filters = {}, page = 1, limit = 10) {
-        const allowedFields = ['type', 'status', 'studentId', 'classId'];
+        const allowedFields = ['type', 'status', 'studentId', 'classId', 'sectionId'];
         const query = { organizationId };
         Object.assign(query, buildFilterQuery(filters, allowedFields));
 
@@ -41,6 +43,7 @@ class FeeRepository {
             Fee.find(query)
                 .populate('studentId', 'fullName registrationNumber')
                 .populate('classId', 'name classCode')
+                .populate('sectionId', 'name')
                 .skip(pagination.skip)
                 .limit(pagination.limit)
                 .sort({ dueDate: -1 }),
@@ -57,7 +60,8 @@ class FeeRepository {
             { new: true, runValidators: true }
         )
             .populate('studentId', 'fullName registrationNumber')
-            .populate('classId', 'name classCode');
+            .populate('classId', 'name classCode')
+            .populate('sectionId', 'name');
     }
 
     async delete(id) {

@@ -56,12 +56,33 @@
 
             <div class="col-md-6">
               <CustomSelect
-                v-model="form.class"
+                v-model="form.classId"
                 label="Class"
                 :options="classOptions"
                 placeholder="Select class"
                 required
-                :error="errors.class"
+                :error="errors.classId"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <CustomSelect
+                v-model="form.sectionId"
+                label="Section"
+                :options="sectionOptions"
+                placeholder="Select section (optional)"
+                :error="errors.sectionId"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <CustomSelect
+                v-model="form.gender"
+                label="Gender"
+                :options="genderOptions"
+                placeholder="Select gender"
+                required
+                :error="errors.gender"
               />
             </div>
 
@@ -214,7 +235,7 @@
 
 <script>
 import { mapActions } from 'vuex';
-import { classes } from '../../../api/api.js';
+import { classes, sections } from '../../../api/api.js';
 import CustomInput from '../../../components/CustomInput.vue';
 import CustomSelect from '../../../components/CustomSelect.vue';
 import CustomButton from '../../../components/CustomButton.vue';
@@ -230,6 +251,9 @@ export default {
         fullName: '',
         age: '',
         class: '',
+        classId: '',
+        sectionId: '',
+        gender: '',
         bloodGroup: '',
         mobile: '',
         parentMobile: '',
@@ -244,17 +268,49 @@ export default {
         fullAddress: ''
       },
       relationOptions: ['father', 'mother', 'brother', 'sister', 'other'],
+      genderOptions: [
+        { value: 'male', label: 'Male' },
+        { value: 'female', label: 'Female' },
+        { value: 'other', label: 'Other' }
+      ],
       errors: {},
       successMessage: '',
       errorMessage: '',
       isLoading: false,
       isAdmitting: false,
-      classOptions: []
+      classOptions: [],
+      allSections: []
     };
   },
   computed: {
     isEditMode() {
       return !!this.$route.params.id;
+    },
+    sectionOptions() {
+      const items = this.form.classId
+        ? this.allSections.filter((section) => section.classId === this.form.classId)
+        : this.allSections;
+
+      return items.map((section) => ({
+        value: section._id,
+        label: section.name
+      }));
+    }
+  },
+  watch: {
+    'form.classId'(newValue) {
+      if (!newValue) {
+        this.form.sectionId = '';
+        return;
+      }
+
+      const validSection = this.allSections.some(
+        (section) => section._id === this.form.sectionId && section.classId === newValue
+      );
+
+      if (!validSection) {
+        this.form.sectionId = '';
+      }
     }
   },
   methods: {
@@ -268,7 +324,8 @@ export default {
       if (!this.form.age || this.form.age < 0 || this.form.age > 150) {
         this.errors.age = 'Valid age is required (0-150)';
       }
-      if (!this.form.class) this.errors.class = 'Class is required';
+      if (!this.form.classId) this.errors.classId = 'Class is required';
+      if (!this.form.gender) this.errors.gender = 'Gender is required';
       if (!this.form.parentMobile) this.errors.parentMobile = 'Parent mobile is required';
       if (!this.form.fatherName) this.errors.fatherName = "Father's name is required";
       if (!this.form.motherName) this.errors.motherName = "Mother's name is required";
@@ -288,10 +345,14 @@ export default {
         const response = await this.fetchAdmissionById(this.$route.params.id);
         if (response?.success && response.data) {
           const admission = response.data;
+          const matchedClass = this.classOptions.find((item) => item.name === admission.class);
           this.form = {
             fullName: admission.fullName || '',
             age: admission.age || '',
             class: admission.class || '',
+            classId: admission.classId?._id || admission.classId || matchedClass?.value || '',
+            sectionId: admission.sectionId?._id || admission.sectionId || '',
+            gender: admission.gender || '',
             bloodGroup: admission.bloodGroup || '',
             mobile: admission.mobile || '',
             parentMobile: admission.parentMobile || '',
@@ -315,16 +376,35 @@ export default {
 
     async loadClassOptions() {
       try {
-        const response = await classes.getAll(1, 200);
-        if (response?.success && response.data) {
-          this.classOptions = response.data.map((item) => ({
-            value: item.name,
-            label: item.classCode ? `${item.name} (${item.classCode})` : item.name
-          }));
-        }
+        const [classResponse, sectionResponse] = await Promise.all([
+          classes.getAll(1, 200),
+          sections.getAll(1, 200)
+        ]);
+
+        const classData = classResponse?.data || [];
+        this.classOptions = classData.map((item) => ({
+          value: item._id,
+          label: item.classCode ? `${item.name} (${item.classCode})` : item.name,
+          name: item.name
+        }));
+
+        this.allSections = (sectionResponse?.data || []).map((item) => ({
+          ...item,
+          classId: item.classId?._id || item.classId
+        }));
       } catch (error) {
         console.error('Failed to load classes:', error);
       }
+    },
+
+    buildAdmissionPayload() {
+      const selectedClass = this.classOptions.find((item) => item.value === this.form.classId);
+
+      return {
+        ...this.form,
+        age: Number(this.form.age),
+        class: selectedClass?.name || this.form.class || ''
+      };
     },
 
     async handleSubmit() {
@@ -332,10 +412,7 @@ export default {
       
       try {
         this.isLoading = true;
-        const formData = { ...this.form };
-        
-        // Convert age to number
-        formData.age = Number(formData.age);
+        const formData = this.buildAdmissionPayload();
         
         if (this.isEditMode) {
           await this.updateAdmission({ id: this.$route.params.id, data: formData });
@@ -364,7 +441,7 @@ export default {
         const studentData = {
           fullName: this.form.fullName,
           age: Number(this.form.age),
-          class: this.form.class,
+          gender: this.form.gender,
           bloodGroup: this.form.bloodGroup,
           mobile: this.form.mobile,
           parentMobile: this.form.parentMobile,
@@ -376,7 +453,10 @@ export default {
           aadharNo: this.form.aadharNo,
           parentAadharNumber: this.form.parentAadharNumber,
           parentAadharRelation: this.form.parentAadharRelation,
-          fullAddress: this.form.fullAddress
+          fullAddress: this.form.fullAddress,
+          classId: this.form.classId,
+          sectionId: this.form.sectionId || null,
+          year: new Date().getFullYear()
         };
         
         const response = await this.createStudent(studentData);
@@ -395,10 +475,10 @@ export default {
     }
   },
   
-  mounted() {
-    this.loadClassOptions();
+  async mounted() {
+    await this.loadClassOptions();
     if (this.isEditMode) {
-      this.loadAdmission();
+      await this.loadAdmission();
     }
   }
 };

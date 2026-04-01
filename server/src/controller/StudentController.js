@@ -16,7 +16,7 @@ class StudentController {
             const {
                 fullName, age, bloodGroup, mobile, parentMobile, studentEmail, parentEmail,
                 fatherName, motherName, guardianName, aadharNo, parentAadharNumber,
-                parentAadharRelation, fullAddress, parentPic, studentPic
+                parentAadharRelation, fullAddress, parentPic, studentPic, gender
             } = req.body;
 
             if (!fullName || !age || !parentMobile || !fatherName || !motherName || !aadharNo || !parentAadharNumber || !parentAadharRelation || !fullAddress) {
@@ -27,6 +27,7 @@ class StudentController {
                 organizationId: req.user.organizationId,
                 fullName,
                 age,
+                gender,
                 bloodGroup,
                 mobile,
                 parentMobile,
@@ -44,12 +45,12 @@ class StudentController {
             });
 
             const { classId, sectionId, year } = req.body;
-            if (classId && sectionId && year) {
+            if (classId && year) {
                 const session = await StudentService.createStudentSession({
                     organizationId: req.user.organizationId,
                     studentId: student._id,
                     classId,
-                    sectionId,
+                    sectionId: sectionId || null,
                     year,
                     registrationNumber: student.registrationNumber
                 });

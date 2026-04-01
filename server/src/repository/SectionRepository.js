@@ -57,6 +57,21 @@ class SectionRepository {
         ).populate('classId', 'name classCode');
     }
 
+    async findDuplicateByName({ organizationId, classId, name, excludeId = null }) {
+        const normalizedName = `${name || ''}`.trim();
+        const query = {
+            organizationId,
+            classId,
+            name: { $regex: `^${normalizedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' }
+        };
+
+        if (excludeId) {
+            query._id = { $ne: excludeId };
+        }
+
+        return Section.findOne(query);
+    }
+
     async delete(id) {
         return Section.findByIdAndDelete(id);
     }

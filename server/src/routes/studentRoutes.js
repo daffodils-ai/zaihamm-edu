@@ -1,6 +1,6 @@
 import express from 'express';
 import StudentController from '../controller/StudentController.js';
-import { authMiddleware, studentAuthMiddleware } from '../middleware/auth_middleware.js';
+import { authMiddleware } from '../middleware/auth_middleware.js';
 import { roleAccessMiddleware } from '../middleware/role_access_middleware.js';
 import { ROLES } from '../constants/index.js';
 
@@ -56,7 +56,7 @@ router.get('/:studentId/history',
 
 // Get latest session
 router.get('/:studentId/latest-session',
-    studentAuthMiddleware,
+    authMiddleware,
     StudentController.getLatestSession.bind(StudentController)
 );
 

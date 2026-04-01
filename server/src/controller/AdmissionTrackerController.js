@@ -11,7 +11,11 @@ class AdmissionTrackerController {
             const {
                 fullName,
                 age,
+                gender,
+                dateOfBirth,
                 class: studentClass,
+                classId,
+                sectionId,
                 bloodGroup,
                 mobile,
                 parentMobile,
@@ -23,41 +27,80 @@ class AdmissionTrackerController {
                 aadharNo,
                 parentAadharNumber,
                 parentAadharRelation,
-                fullAddress
+                fullAddress,
+                previousSchool
             } = req.body;
 
+            const normalizedFullName = `${fullName || ''}`.trim();
+            const normalizedClass = `${studentClass || ''}`.trim();
+            const normalizedParentMobile = `${parentMobile || ''}`.trim();
+            const normalizedFatherName = `${fatherName || ''}`.trim();
+            const normalizedMotherName = `${motherName || ''}`.trim();
+            const normalizedAadharNo = `${aadharNo || ''}`.trim();
+            const normalizedParentAadharNumber = `${parentAadharNumber || ''}`.trim();
+            const normalizedRelation = `${parentAadharRelation || ''}`.trim();
+            const normalizedAddress = `${fullAddress || ''}`.trim();
+            const parsedDob = dateOfBirth ? new Date(dateOfBirth) : null;
+            const derivedAge = parsedDob && !Number.isNaN(parsedDob.getTime())
+                ? this.calculateAgeFromDob(parsedDob)
+                : null;
+            const normalizedAge = Number.isFinite(Number(age))
+                ? Number(age)
+                : derivedAge;
+
             // Validate required fields
-            if (!fullName || !age || !studentClass || !parentMobile || !fatherName || !motherName || !aadharNo || !parentAadharNumber || !parentAadharRelation || !fullAddress) {
+            if (
+                !normalizedFullName ||
+                normalizedAge === null ||
+                Number.isNaN(normalizedAge) ||
+                !normalizedClass ||
+                !normalizedParentMobile ||
+                !normalizedFatherName ||
+                !normalizedMotherName ||
+                !normalizedAadharNo ||
+                !normalizedParentAadharNumber ||
+                !normalizedRelation ||
+                !normalizedAddress
+            ) {
                 throw new ApiError(HTTP_CODES.BAD_REQUEST, ERROR_MESSAGES.INVALID_REQUEST);
             }
 
             // Validate age
-            if (typeof age !== 'number' || age < 0 || age > 150) {
+            if (normalizedAge < 0 || normalizedAge > 150) {
                 throw new ApiError(HTTP_CODES.BAD_REQUEST, 'Invalid age');
+            }
+
+            if (gender && !['male', 'female', 'other'].includes(gender)) {
+                throw new ApiError(HTTP_CODES.BAD_REQUEST, 'Invalid gender');
             }
 
             // Validate parent Aadhar relation
             const allowedRelations = ['father', 'mother', 'brother', 'sister', 'other'];
-            if (!allowedRelations.includes(parentAadharRelation)) {
+            if (!allowedRelations.includes(normalizedRelation)) {
                 throw new ApiError(HTTP_CODES.BAD_REQUEST, 'Invalid parent Aadhar relation');
             }
 
             const admission = await AdmissionTrackerService.create({
-                fullName,
-                age,
-                class: studentClass,
+                fullName: normalizedFullName,
+                age: normalizedAge,
+                gender,
+                dateOfBirth,
+                class: normalizedClass,
+                classId,
+                sectionId,
                 bloodGroup,
                 mobile,
-                parentMobile,
+                parentMobile: normalizedParentMobile,
                 studentEmail,
                 parentEmail,
-                fatherName,
-                motherName,
+                fatherName: normalizedFatherName,
+                motherName: normalizedMotherName,
                 guardianName,
-                aadharNo,
-                parentAadharNumber,
-                parentAadharRelation,
-                fullAddress
+                aadharNo: normalizedAadharNo,
+                parentAadharNumber: normalizedParentAadharNumber,
+                parentAadharRelation: normalizedRelation,
+                fullAddress: normalizedAddress,
+                previousSchool
             });
 
             res.status(HTTP_CODES.CREATED).json({
@@ -126,6 +169,10 @@ class AdmissionTrackerController {
                 }
             }
 
+            if (updateData.gender && !['male', 'female', 'other'].includes(updateData.gender)) {
+                throw new ApiError(HTTP_CODES.BAD_REQUEST, 'Invalid gender');
+            }
+
             // Validate age if provided
             if (updateData.age !== undefined) {
                 if (typeof updateData.age !== 'number' || updateData.age < 0 || updateData.age > 150) {
@@ -159,6 +206,18 @@ class AdmissionTrackerController {
         } catch (error) {
             next(error);
         }
+    }
+
+    calculateAgeFromDob(dateOfBirth) {
+        const today = new Date();
+        let age = today.getUTCFullYear() - dateOfBirth.getUTCFullYear();
+        const monthDiff = today.getUTCMonth() - dateOfBirth.getUTCMonth();
+
+        if (monthDiff < 0 || (monthDiff === 0 && today.getUTCDate() < dateOfBirth.getUTCDate())) {
+            age -= 1;
+        }
+
+        return Math.max(age, 0);
     }
 }
 

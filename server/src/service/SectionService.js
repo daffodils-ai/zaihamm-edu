@@ -9,6 +9,16 @@ import { Logger } from '../logger/logger.js';
 class SectionService {
     async create(data) {
         try {
+            const duplicate = await SectionRepository.findDuplicateByName({
+                organizationId: data.organizationId,
+                classId: data.classId,
+                name: data.name
+            });
+
+            if (duplicate) {
+                throw new ApiError(HTTP_CODES.CONFLICT, 'Section name already exists for this class');
+            }
+
             const section = await SectionRepository.create(data);
             Logger.log(`Section created: ${data.name}`, Logger.Level.INFO);
             return section;
@@ -51,6 +61,24 @@ class SectionService {
 
     async update(id, data) {
         try {
+            const existing = await SectionRepository.findById(id);
+            if (!existing) {
+                throw new ApiError(HTTP_CODES.NOT_FOUND, ERROR_MESSAGES.SECTION_NOT_FOUND);
+            }
+
+            const nextClassId = data.classId || existing.classId?._id || existing.classId;
+            const nextName = data.name || existing.name;
+            const duplicate = await SectionRepository.findDuplicateByName({
+                organizationId: existing.organizationId,
+                classId: nextClassId,
+                name: nextName,
+                excludeId: id
+            });
+
+            if (duplicate) {
+                throw new ApiError(HTTP_CODES.CONFLICT, 'Section name already exists for this class');
+            }
+
             const section = await SectionRepository.update(id, data);
             if (!section) {
                 throw new ApiError(HTTP_CODES.NOT_FOUND, ERROR_MESSAGES.SECTION_NOT_FOUND);

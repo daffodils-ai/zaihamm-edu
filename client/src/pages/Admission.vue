@@ -164,6 +164,12 @@
       <div class="container">
         <h2>Apply Now</h2>
         <div class="form-container">
+          <div v-if="submitSuccess" class="form-message form-message-success">
+            {{ submitSuccess }}
+          </div>
+          <div v-if="submitError" class="form-message form-message-error">
+            {{ submitError }}
+          </div>
           <form @submit.prevent="submitApplication" class="application-form">
             <div class="form-row">
               <div class="form-group">
@@ -282,8 +288,8 @@
             </div>
 
             <div class="form-actions">
-              <button type="submit" class="submit-btn">
-                Submit Application
+              <button type="submit" class="submit-btn" :disabled="isSubmitting">
+                {{ isSubmitting ? 'Submitting...' : 'Submit Application' }}
               </button>
               <button type="button" @click="resetForm" class="reset-btn">
                 Reset Form
@@ -334,10 +340,32 @@
 </template>
 
 <script>
+import { api } from '../services/api'
+
+const GRADE_LABELS = {
+  nursery: 'Nursery',
+  kg: 'Kindergarten',
+  1: 'Grade 1',
+  2: 'Grade 2',
+  3: 'Grade 3',
+  4: 'Grade 4',
+  5: 'Grade 5',
+  6: 'Grade 6',
+  7: 'Grade 7',
+  8: 'Grade 8',
+  9: 'Grade 9',
+  10: 'Grade 10',
+  11: 'Grade 11',
+  12: 'Grade 12',
+}
+
 export default {
   name: "Admission",
   data() {
     return {
+      isSubmitting: false,
+      submitError: "",
+      submitSuccess: "",
       form: {
         studentName: "",
         dob: "",
@@ -355,13 +383,55 @@ export default {
     };
   },
   methods: {
+    calculateAge(dob) {
+      if (!dob) return 0
+      const birthDate = new Date(dob)
+      const today = new Date()
+      let age = today.getFullYear() - birthDate.getFullYear()
+      const monthDiff = today.getMonth() - birthDate.getMonth()
+
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age -= 1
+      }
+
+      return Math.max(age, 0)
+    },
     scrollToForm() {
       this.$refs.formSection?.scrollIntoView({ behavior: "smooth" });
     },
-    submitApplication() {
-      // Handle form submission
-      alert("Application submitted successfully! We will contact you soon.");
-      this.resetForm();
+    async submitApplication() {
+      this.isSubmitting = true
+      this.submitError = ""
+      this.submitSuccess = ""
+
+      try {
+        const payload = {
+          fullName: this.form.studentName,
+          age: this.calculateAge(this.form.dob),
+          gender: this.form.gender,
+          dateOfBirth: this.form.dob,
+          class: GRADE_LABELS[this.form.grade] || this.form.grade,
+          parentMobile: this.form.phone,
+          studentEmail: this.form.email,
+          parentEmail: this.form.email,
+          fatherName: this.form.fatherName,
+          motherName: this.form.motherName,
+          aadharNo: this.form.aadhar,
+          parentAadharNumber: this.form.parentsAadhar,
+          parentAadharRelation: "father",
+          fullAddress: this.form.address,
+          previousSchool: this.form.previousSchool,
+        }
+
+        await api.createAdmission(payload)
+        this.submitSuccess = "Application submitted successfully. We will contact you soon."
+        this.resetForm()
+      } catch (error) {
+        this.submitError =
+          error.response?.data?.message || error.message || "Failed to submit application."
+      } finally {
+        this.isSubmitting = false
+      }
     },
     resetForm() {
       this.form = {
@@ -375,6 +445,8 @@ export default {
         phone: "",
         address: "",
         previousSchool: "",
+        aadhar: "",
+        parentsAadhar: "",
       };
     },
   },
@@ -388,6 +460,22 @@ export default {
 
 .admission {
   width: 100%;
+}
+
+.form-message {
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  padding: 0.9rem 1rem;
+}
+
+.form-message-success {
+  background: #e8f7ee;
+  color: #166534;
+}
+
+.form-message-error {
+  background: #fdecec;
+  color: #b42318;
 }
 
 /* Hero Section */
