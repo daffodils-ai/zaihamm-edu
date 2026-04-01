@@ -1,4 +1,5 @@
 import StudentService from '../service/StudentService.js';
+import AdmissionTrackerService from '../service/AdmissionTrackerService.js';
 import { ApiError } from '../utils/error.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES, HTTP_CODES, ALLOWED_ROLES_TO_ADMIT_STUDENT } from '../constants/index.js';
 import { Logger } from '../logger/logger.js';
@@ -44,7 +45,7 @@ class StudentController {
                 studentPic
             });
 
-            const { classId, sectionId, year } = req.body;
+            const { classId, sectionId, year, admissionTrackerId } = req.body;
             if (classId && year) {
                 const session = await StudentService.createStudentSession({
                     organizationId: req.user.organizationId,
@@ -54,6 +55,10 @@ class StudentController {
                     year,
                     registrationNumber: student.registrationNumber
                 });
+
+                if (admissionTrackerId) {
+                    await AdmissionTrackerService.delete(admissionTrackerId);
+                }
 
                 res.status(HTTP_CODES.CREATED).json({
                     success: true,
@@ -69,6 +74,10 @@ class StudentController {
                     }
                 });
             } else {
+                if (admissionTrackerId) {
+                    await AdmissionTrackerService.delete(admissionTrackerId);
+                }
+
                 res.status(HTTP_CODES.CREATED).json({
                     success: true,
                     statusCode: HTTP_CODES.CREATED,

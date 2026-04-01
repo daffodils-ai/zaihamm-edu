@@ -456,7 +456,8 @@ export default {
           fullAddress: this.form.fullAddress,
           classId: this.form.classId,
           sectionId: this.form.sectionId || null,
-          year: new Date().getFullYear()
+          year: new Date().getFullYear(),
+          admissionTrackerId: this.isEditMode ? this.$route.params.id : null
         };
         
         const response = await this.createStudent(studentData);

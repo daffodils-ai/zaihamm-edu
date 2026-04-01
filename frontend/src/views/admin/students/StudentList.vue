@@ -5,9 +5,6 @@
         <h1>Students</h1>
         <p class="text-muted">Manage all students</p>
       </div>
-      <router-link to="/admin/students/new" class="btn btn-primary">
-        <i>➕</i> Add Student
-      </router-link>
     </div>
 
     <AlertComponent
