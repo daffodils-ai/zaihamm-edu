@@ -1,5 +1,29 @@
 <template>
   <div class="home">
+    <!-- Moving Notice Banner -->
+    <div v-if="bannerNotices.length > 0" class="notice-banner">
+      <div class="notice-banner-content">
+        <span class="notice-label">📢 Notice:</span>
+        <div class="marquee-container">
+          <div class="marquee-track" :style="{ animationDuration: marqueeDuration + 's' }">
+            <div class="marquee-content">
+              <span v-for="(notice, index) in bannerNotices" :key="notice._id" class="notice-item">
+                {{ notice.title }} - {{ notice.description }}
+                <span v-if="index < bannerNotices.length - 1" class="notice-separator"> | </span>
+              </span>
+            </div>
+            <!-- Duplicate content for seamless loop -->
+            <div class="marquee-content" aria-hidden="true">
+              <span v-for="(notice, index) in bannerNotices" :key="'dup-' + notice._id" class="notice-item">
+                {{ notice.title }} - {{ notice.description }}
+                <span v-if="index < bannerNotices.length - 1" class="notice-separator"> | </span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <!-- Hero Section -->
     <section class="hero">
       <div class="hero-content">
@@ -97,20 +121,17 @@
       <div class="facilities-section">
         <h3>{{ $t('home.facilities.title') }}</h3>
         <div class="facilities-grid">
-          <div class="facility-item">✨ {{ $t('home.facilities.smartClassrooms') }}</div>
-          <div class="facility-item">🏃 {{ $t('home.facilities.sportsComplex') }}</div>
           <div class="facility-item">📚 {{ $t('home.facilities.library') }}</div>
           <div class="facility-item">🔬 {{ $t('home.facilities.scienceLabs') }}</div>
           <div class="facility-item">🖥️ {{ $t('home.facilities.computerLab') }}</div>
           <div class="facility-item">🎭 {{ $t('home.facilities.auditorium') }}</div>
-          <div class="facility-item">🍽️ {{ $t('home.facilities.cafeteria') }}</div>
           <div class="facility-item">🩺 {{ $t('home.facilities.medicalCenter') }}</div>
         </div>
       </div>
     </section>
 
     <!-- News & Events -->
-    <section class="news-events">
+    <!-- <section class="news-events">
       <h2>{{ $t('home.newsEvents.title') }}</h2>
       <div class="events-grid">
         <div class="event-card">
@@ -138,7 +159,7 @@
           <p>{{ $t('home.newsEvents.mathOlympiad.description') }}</p>
         </div>
       </div>
-    </section>
+    </section> -->
 
     <!-- Testimonials -->
     <section class="testimonials">
@@ -185,16 +206,42 @@
 <script>
 import principalImage from '../assets/rohit.png'
 import heroImage from '../assets/rscentralschimg.png'
+import { api } from '../services/api.js'
 
 export default {
   name: 'Home',
   data() {
     return {
       principalImage,
-      heroImage
+      heroImage,
+      bannerNotices: []
     }
   },
+  computed: {
+    marqueeDuration() {
+      // Base duration of 10s plus 5s per notice for consistent speed
+      return Math.max(20, 10 + this.bannerNotices.length * 8)
+    }
+  },
+  mounted() {
+    this.fetchBannerNotices()
+  },
   methods: {
+    async fetchBannerNotices() {
+      try {
+        const response = await api.getNotices(1, 10, { noticeType: 'Banner', isActive: true })
+        // Axios wraps response in data property
+        const responseData = response.data
+        if (responseData?.success && responseData.data) {
+          this.bannerNotices = responseData.data.filter(notice => 
+            new Date(notice.fromDate) <= new Date() && 
+            new Date(notice.toDate) >= new Date()
+          )
+        }
+      } catch (error) {
+        console.error('Failed to fetch banner notices:', error)
+      }
+    },
     scrollToAdmission() {
       this.$refs.admissionSection?.scrollIntoView({ behavior: 'smooth' })
     },
@@ -214,6 +261,65 @@ export default {
   width: 100%;
 }
 
+/* Notice Banner */
+.notice-banner {
+  background: linear-gradient(90deg, #FF671F 0%, #046A38 100%);
+  color: white;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  position: relative;
+  z-index: 100;
+}
+
+.notice-banner-content {
+  display: flex;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.notice-label {
+  font-weight: 600;
+  margin-right: 1rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.marquee-container {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.marquee-track {
+  display: flex;
+  animation: marquee-scroll linear infinite;
+}
+
+.marquee-content {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding-right: 2rem;
+}
+
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.notice-item {
+  display: inline;
+}
+
+.notice-separator {
+  margin: 0 1rem;
+  opacity: 0.7;
+}
+
 /* Hero Section */
 .hero {
   background: linear-gradient(
@@ -224,7 +330,7 @@ export default {
     #CFE8D9 75%,
     #046A38 100%
   );
-  color: white;
+  color: black;
   padding: 4rem 2rem;
   display: grid;
   grid-template-columns: 1fr 1fr;

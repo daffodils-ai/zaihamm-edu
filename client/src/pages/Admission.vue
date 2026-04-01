@@ -126,7 +126,7 @@
       </div>
     </section>
 
-    <!-- Important Dates -->
+    <!-- Important Dates
     <section class="dates-section">
       <div class="container">
         <h2>Important Dates</h2>
@@ -157,7 +157,7 @@
           </div>
         </div>
       </div>
-    </section>
+    </section> -->
 
     <!-- Application Form Section -->
     <section class="form-section" ref="formSection">
@@ -480,8 +480,15 @@ export default {
 
 /* Hero Section */
 .hero {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(
+    to right,
+    #FF671F 0%,
+    #FFD6BF 25%,
+    #FFFFFF 50%,
+    #CFE8D9 75%,
+    #046A38 100%
+  );
+  color: black;
   padding: 4rem 2rem;
   display: grid;
   grid-template-columns: 1fr 1fr;

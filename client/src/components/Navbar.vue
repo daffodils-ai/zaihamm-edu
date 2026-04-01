@@ -13,15 +13,14 @@
           <li><router-link to="/" class="nav-link">{{ $t('nav.home') }}</router-link></li>
           <li><router-link to="/about" class="nav-link">{{ $t('nav.about') }}</router-link></li>
           <li><router-link to="/admission" class="nav-link">{{ $t('nav.admissions') }}</router-link></li>
-          <li><router-link to="/facilities" class="nav-link">{{ $t('nav.facilities') }}</router-link></li>
           <li><router-link to="/notices" class="nav-link">{{ $t('nav.notices') }}</router-link></li>
           <li><router-link to="/contact" class="nav-link">{{ $t('nav.contact') }}</router-link></li>
           <li><a href="http://localhost:5174/login" class="nav-link admin-link">{{ $t('nav.admin') }}</a></li>
         </ul>
         <div class="language-switcher">
-          <button @click="switchLanguage('en')" :class="{ active: $i18n.locale === 'en' }" title="English">EN</button>
+          <button @click="switchLanguage('en')" :class="{ active: $i18n.locale === 'en' }" title="English">ENGLISH</button>
           <span class="separator">|</span>
-          <button @click="switchLanguage('hi')" :class="{ active: $i18n.locale === 'hi' }" title="हिंदी">HI</button>
+          <button @click="switchLanguage('hi')" :class="{ active: $i18n.locale === 'hi' }" title="हिंदी">हिंदी</button>
         </div>
         <div class="mobile-menu-toggle" @click="toggleMobileMenu">
           <span></span>
@@ -102,12 +101,14 @@ export default {
   color: white;
   min-width: 0;
   flex-shrink: 1;
+  margin-right: auto;
 }
 
 .navbar-right {
   display: flex;
   align-items: center;
   gap: 1rem;
+  margin-left: 8rem;
 }
 
 .brand-logo {
@@ -285,7 +286,7 @@ export default {
 .language-switcher button {
   background: transparent;
   border: none;
-  color: white;
+  color: black;
   padding: 0.15rem 0.3rem;
   border-radius: 2px;
   cursor: pointer;

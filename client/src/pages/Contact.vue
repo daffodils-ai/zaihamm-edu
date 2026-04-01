@@ -67,7 +67,7 @@
     </section>
 
     <!-- Contact Form -->
-    <section class="contact-form-section" ref="contactSection">
+    <!-- <section class="contact-form-section" ref="contactSection">
       <div class="container">
         <div class="form-container">
           <div class="form-header">
@@ -176,7 +176,7 @@
           </form>
         </div>
       </div>
-    </section>
+    </section> -->
 
     <!-- Map Section -->
     <section class="map-section" ref="mapSection">
@@ -198,7 +198,7 @@
     </section>
 
     <!-- Quick Contact -->
-    <section class="quick-contact-section">
+    <!-- <section class="quick-contact-section">
       <div class="container">
         <h2>Need Immediate Help?</h2>
         <div class="quick-contact-grid">
@@ -233,7 +233,7 @@
           </div>
         </div>
       </div>
-    </section>
+    </section> -->
   </div>
 </template>
 
@@ -295,8 +295,15 @@ export default {
 
 /* Hero Section */
 .hero {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(
+    to right,
+    #FF671F 0%,
+    #FFD6BF 25%,
+    #FFFFFF 50%,
+    #CFE8D9 75%,
+    #046A38 100%
+  );
+  color: black;
   padding: 4rem 2rem;
   display: grid;
   grid-template-columns: 1fr 1fr;
