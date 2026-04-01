@@ -8,6 +8,19 @@ import { Logger } from '../logger/logger.js';
  * Controller for Student operations
  */
 class StudentController {
+    calculateAgeFromDob(dateOfBirth) {
+        const parsedDate = new Date(dateOfBirth);
+        if (Number.isNaN(parsedDate.getTime())) {
+            return null;
+        }
+
+        const today = new Date();
+        const diffMs = today.getTime() - parsedDate.getTime();
+        const yearMs = 365.2425 * 24 * 60 * 60 * 1000;
+
+        return Math.max(Math.floor(diffMs / yearMs), 0);
+    }
+
     async admit(req, res, next) {
         try {
             if (!ALLOWED_ROLES_TO_ADMIT_STUDENT.includes(req.user.role)) {
@@ -15,19 +28,26 @@ class StudentController {
             }
 
             const {
-                fullName, age, bloodGroup, mobile, parentMobile, studentEmail, parentEmail,
+                fullName, age, dateOfBirth, bloodGroup, mobile, parentMobile, studentEmail, parentEmail,
                 fatherName, motherName, guardianName, aadharNo, parentAadharNumber,
                 parentAadharRelation, fullAddress, parentPic, studentPic, gender
             } = req.body;
 
-            if (!fullName || !age || !parentMobile || !fatherName || !motherName || !aadharNo || !parentAadharNumber || !parentAadharRelation || !fullAddress) {
+            const normalizedAge = dateOfBirth ? this.calculateAgeFromDob(dateOfBirth) : Number(age);
+
+            if (!fullName || (!dateOfBirth && !age) || !parentMobile || !fatherName || !motherName || !aadharNo || !parentAadharNumber || !parentAadharRelation || !fullAddress) {
                 throw new ApiError(HTTP_CODES.BAD_REQUEST, ERROR_MESSAGES.INVALID_REQUEST);
+            }
+
+            if (!Number.isFinite(normalizedAge) || normalizedAge < 0) {
+                throw new ApiError(HTTP_CODES.BAD_REQUEST, 'Invalid age/date of birth');
             }
 
             const student = await StudentService.admitStudent({
                 organizationId: req.user.organizationId,
                 fullName,
-                age,
+                age: normalizedAge,
+                dateOfBirth: dateOfBirth || null,
                 gender,
                 bloodGroup,
                 mobile,

@@ -37,12 +37,22 @@
             </div>
             <div class="col-md-6">
               <CustomInput
+                v-model="form.dateOfBirth"
+                label="Date of Birth"
+                type="date"
+                required
+                :error="errors.dateOfBirth"
+              />
+            </div>
+            <div class="col-md-6">
+              <CustomInput
                 v-model="form.age"
                 label="Age"
                 type="number"
-                placeholder="Enter age"
+                placeholder="Auto-calculated from date of birth"
                 required
                 :error="errors.age"
+                readonly
               />
             </div>
             <div class="col-md-6">
@@ -218,6 +228,7 @@ export default {
       form: {
         fullName: '',
         age: '',
+        dateOfBirth: '',
         studentEmail: '',
         mobile: '',
         aadharNo: '',
@@ -271,6 +282,18 @@ export default {
     }
   },
   watch: {
+    'form.dateOfBirth'(newValue) {
+      if (!newValue) {
+        this.form.age = '';
+        return;
+      }
+
+      const today = new Date();
+      const birthDate = new Date(newValue);
+      const diffMs = today.getTime() - birthDate.getTime();
+      const yearMs = 365.2425 * 24 * 60 * 60 * 1000;
+      this.form.age = String(Math.max(Math.floor(diffMs / yearMs), 0));
+    },
     'form.classId'(newValue) {
       if (!newValue) {
         this.form.sectionId = '';
@@ -294,6 +317,7 @@ export default {
       this.form = {
         fullName: student?.fullName || '',
         age: student?.age || '',
+        dateOfBirth: student?.dateOfBirth ? String(student.dateOfBirth).slice(0, 10) : '',
         studentEmail: student?.studentEmail || '',
         mobile: student?.mobile || '',
         aadharNo: student?.aadharNo || '',
@@ -336,6 +360,7 @@ export default {
     validateForm() {
       this.errors = {};
       if (!this.form.fullName) this.errors.fullName = 'Full name is required';
+      if (!this.form.dateOfBirth) this.errors.dateOfBirth = 'Date of birth is required';
       if (!this.form.age || this.form.age < 5 || this.form.age > 30) {
         this.errors.age = 'Valid age is required';
       }

@@ -10,6 +10,19 @@ import { Logger } from '../logger/logger.js';
  * Service for Student operations
  */
 class StudentService {
+    calculateAgeFromDob(dateOfBirth) {
+        const parsedDate = new Date(dateOfBirth);
+        if (Number.isNaN(parsedDate.getTime())) {
+            return null;
+        }
+
+        const today = new Date();
+        const diffMs = today.getTime() - parsedDate.getTime();
+        const yearMs = 365.2425 * 24 * 60 * 60 * 1000;
+
+        return Math.max(Math.floor(diffMs / yearMs), 0);
+    }
+
     async enrichStudentWithLatestSession(student) {
         if (!student) return null;
 
@@ -30,6 +43,13 @@ class StudentService {
      */
     async admitStudent(data) {
         try {
+            if (data.dateOfBirth) {
+                const derivedAge = this.calculateAgeFromDob(data.dateOfBirth);
+                if (derivedAge !== null) {
+                    data.age = derivedAge;
+                }
+            }
+
             // Check if student already exists with same Aadhar
             const existingStudent = await StudentRepository.findByAadhar(
                 data.aadharNo,
@@ -173,6 +193,14 @@ class StudentService {
                 year,
                 ...studentData
             } = data;
+
+            if (studentData.dateOfBirth) {
+                const derivedAge = this.calculateAgeFromDob(studentData.dateOfBirth);
+                if (derivedAge === null) {
+                    throw new ApiError(HTTP_CODES.BAD_REQUEST, 'Invalid date of birth');
+                }
+                studentData.age = derivedAge;
+            }
 
             const student = await StudentRepository.update(id, studentData);
             if (!student) {

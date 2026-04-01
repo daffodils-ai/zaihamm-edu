@@ -55,6 +55,15 @@
             </div>
 
             <div class="col-md-6">
+              <CustomInput
+                v-model="form.dateOfBirth"
+                label="Date of Birth"
+                type="date"
+                :error="errors.dateOfBirth"
+              />
+            </div>
+
+            <div class="col-md-6">
               <CustomSelect
                 v-model="form.classId"
                 label="Class"
@@ -250,6 +259,7 @@ export default {
       form: {
         fullName: '',
         age: '',
+        dateOfBirth: '',
         class: '',
         classId: '',
         sectionId: '',
@@ -298,6 +308,18 @@ export default {
     }
   },
   watch: {
+    'form.dateOfBirth'(newValue) {
+      if (!newValue) {
+        this.form.age = '';
+        return;
+      }
+
+      const today = new Date();
+      const birthDate = new Date(newValue);
+      const diffMs = today.getTime() - birthDate.getTime();
+      const yearMs = 365.2425 * 24 * 60 * 60 * 1000;
+      this.form.age = Math.max(Math.floor(diffMs / yearMs), 0);
+    },
     'form.classId'(newValue) {
       if (!newValue) {
         this.form.sectionId = '';
@@ -324,6 +346,7 @@ export default {
       if (!this.form.age || this.form.age < 0 || this.form.age > 150) {
         this.errors.age = 'Valid age is required (0-150)';
       }
+      if (!this.form.dateOfBirth) this.errors.dateOfBirth = 'Date of birth is required';
       if (!this.form.classId) this.errors.classId = 'Class is required';
       if (!this.form.gender) this.errors.gender = 'Gender is required';
       if (!this.form.parentMobile) this.errors.parentMobile = 'Parent mobile is required';
@@ -349,6 +372,7 @@ export default {
           this.form = {
             fullName: admission.fullName || '',
             age: admission.age || '',
+            dateOfBirth: admission.dateOfBirth ? String(admission.dateOfBirth).slice(0, 10) : '',
             class: admission.class || '',
             classId: admission.classId?._id || admission.classId || matchedClass?.value || '',
             sectionId: admission.sectionId?._id || admission.sectionId || '',
@@ -441,6 +465,7 @@ export default {
         const studentData = {
           fullName: this.form.fullName,
           age: Number(this.form.age),
+          dateOfBirth: this.form.dateOfBirth || null,
           gender: this.form.gender,
           bloodGroup: this.form.bloodGroup,
           mobile: this.form.mobile,
