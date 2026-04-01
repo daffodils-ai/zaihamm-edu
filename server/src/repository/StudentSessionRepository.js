@@ -5,8 +5,8 @@ import { buildPaginationOptions } from '../utils/index.js';
  * Repository for Student Session operations
  */
 class StudentSessionRepository {
-    async create(data) {
-        return new StudentSession(data).save();
+    async create(data, options = {}) {
+        return new StudentSession(data).save(options);
     }
 
     async findById(id) {

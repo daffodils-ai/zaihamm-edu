@@ -5,9 +5,21 @@
         <h1>Admission Entries</h1>
         <p class="text-muted">Manage all admission tracker entries</p>
       </div>
-      <router-link to="/admin/admissions/new" class="btn btn-primary">
-        <i>➕</i> Add Admission
-      </router-link>
+      <div class="d-flex gap-2 align-items-center flex-wrap">
+        <button class="btn btn-outline-secondary" :disabled="downloadLoading" @click="downloadTemplate">
+          {{ downloadLoading ? 'Preparing...' : 'Download Excel Template' }}
+        </button>
+        <button class="btn btn-outline-dark" :disabled="exportLoading" @click="exportAdmissions">
+          {{ exportLoading ? 'Exporting...' : 'Export Records' }}
+        </button>
+        <label class="btn btn-success mb-0">
+          {{ importLoading ? 'Importing...' : 'Import Excel/CSV' }}
+          <input type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" class="d-none" :disabled="importLoading" @change="handleFileImport" />
+        </label>
+        <router-link to="/admin/admissions/new" class="btn btn-primary">
+          <i>➕</i> Add Admission
+        </router-link>
+      </div>
     </div>
 
     <AlertComponent
@@ -142,6 +154,7 @@
 
 <script>
 import { mapState, mapActions } from 'vuex';
+import { admissions } from '../../../api/api.js';
 import CustomInput from '../../../components/CustomInput.vue';
 import AlertComponent from '../../../components/AlertComponent.vue';
 import { getErrorMessage } from '../../../utils/validation.js';
@@ -154,6 +167,9 @@ export default {
       filters: { fullName: '', fatherName: '', motherName: '', aadharNo: '', parentMobile: '', fromDate: '', toDate: '' },
       successMessage: '',
       errorMessage: '',
+      downloadLoading: false,
+      exportLoading: false,
+      importLoading: false,
       page: 1,
       limit: 20
     };
@@ -170,6 +186,114 @@ export default {
   },
   methods: {
     ...mapActions('admissions', ['fetchAdmissions', 'deleteAdmission']),
+    parseCsvLine(line) {
+      const values = [];
+      let current = '';
+      let inQuotes = false;
+
+      for (let index = 0; index < line.length; index += 1) {
+        const char = line[index];
+        const next = line[index + 1];
+
+        if (char === '"' && inQuotes && next === '"') {
+          current += '"';
+          index += 1;
+        } else if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          values.push(current);
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+
+      values.push(current);
+      return values.map((value) => value.trim());
+    },
+    parseCsv(text) {
+      const lines = text
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+
+      if (lines.length < 2) {
+        return [];
+      }
+
+      const headers = this.parseCsvLine(lines[0]);
+      return lines.slice(1).map((line) => {
+        const values = this.parseCsvLine(line);
+        return headers.reduce((acc, header, index) => {
+          acc[header] = values[index] ?? '';
+          return acc;
+        }, {});
+      });
+    },
+    downloadBlob(blob, filename) {
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    },
+    async downloadTemplate() {
+      try {
+        this.downloadLoading = true;
+        const blob = await admissions.downloadTemplate('xlsx');
+        this.downloadBlob(blob, 'admission-template.xlsx');
+      } catch (error) {
+        this.errorMessage = getErrorMessage(error);
+      } finally {
+        this.downloadLoading = false;
+      }
+    },
+    async exportAdmissions() {
+      try {
+        this.exportLoading = true;
+        const blob = await admissions.exportCsv(this.filters);
+        this.downloadBlob(blob, 'admission-records.xlsx');
+      } catch (error) {
+        this.errorMessage = getErrorMessage(error);
+      } finally {
+        this.exportLoading = false;
+      }
+    },
+    async handleFileImport(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      try {
+        this.importLoading = true;
+        this.errorMessage = '';
+        if (file.name.toLowerCase().endsWith('.csv')) {
+          const text = await file.text();
+          const rows = this.parseCsv(text);
+
+          if (rows.length === 0) {
+            this.errorMessage = 'The selected CSV does not contain any data rows.';
+            return;
+          }
+
+          const response = await admissions.bulkImport(rows);
+          const result = response?.data || {};
+          this.successMessage = `Bulk import completed. Created: ${result.created || 0}, Skipped: ${result.skipped || 0}, Failed: ${result.failed || 0}.`;
+        } else {
+          const response = await admissions.bulkImportFile(file);
+          const result = response?.data || {};
+          this.successMessage = `Bulk import completed. Created: ${result.created || 0}, Skipped: ${result.skipped || 0}, Failed: ${result.failed || 0}.`;
+        }
+        await this.loadAdmissions();
+      } catch (error) {
+        this.errorMessage = getErrorMessage(error);
+      } finally {
+        this.importLoading = false;
+        event.target.value = '';
+      }
+    },
     async loadAdmissions() {
       try {
         this.isLoading = true;

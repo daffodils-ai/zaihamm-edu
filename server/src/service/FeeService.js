@@ -9,9 +9,9 @@ import { Logger } from '../logger/logger.js';
  * Service for Fee operations
  */
 class FeeService {
-    async create(data) {
+    async create(data, options = {}) {
         try {
-            const fee = await FeeRepository.create(data);
+            const fee = await FeeRepository.create(data, options);
             Logger.log(`Fee created for student: ${data.studentId}`, Logger.Level.INFO);
             return fee;
         } catch (error) {

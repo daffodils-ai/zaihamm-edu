@@ -5,8 +5,8 @@ import { buildFilterQuery, buildPaginationOptions } from '../utils/index.js';
  * Repository for Student operations
  */
 class StudentRepository {
-    async create(data) {
-        return new Student(data).save();
+    async create(data, options = {}) {
+        return new Student(data).save(options);
     }
 
     async findById(id) {
@@ -17,12 +17,12 @@ class StudentRepository {
         return Student.findOne({ registrationNumber });
     }
 
-    async findByAadhar(aadhar, organizationId = null) {
+    async findByAadhar(aadhar, organizationId = null, options = {}) {
         const query = { aadharNo: aadhar };
         if (organizationId) {
             query.organizationId = organizationId;
         }
-        return Student.findOne(query);
+        return Student.findOne(query).session(options.session || null);
     }
 
     async findAll(organizationId, filters = {}, page = 1, limit = 10) {

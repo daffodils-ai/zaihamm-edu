@@ -6,8 +6,8 @@ import { buildFilterQuery, buildPaginationOptions } from '../utils/index.js';
  * Repository for Fee operations
  */
 class FeeRepository {
-    async create(data) {
-        return new Fee(data).save();
+    async create(data, options = {}) {
+        return new Fee(data).save(options);
     }
 
     async findById(id) {

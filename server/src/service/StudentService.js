@@ -41,7 +41,7 @@ class StudentService {
     /**
      * Admit new student
      */
-    async admitStudent(data) {
+    async admitStudent(data, options = {}) {
         try {
             if (data.dateOfBirth) {
                 const derivedAge = this.calculateAgeFromDob(data.dateOfBirth);
@@ -53,7 +53,8 @@ class StudentService {
             // Check if student already exists with same Aadhar
             const existingStudent = await StudentRepository.findByAadhar(
                 data.aadharNo,
-                data.organizationId
+                data.organizationId,
+                options
             );
             if (existingStudent) {
                 throw new ApiError(HTTP_CODES.CONFLICT, 'Student with this Aadhar already exists');
@@ -64,7 +65,7 @@ class StudentService {
             data.registrationNumber = registrationNumber;
 
             // Create student
-            const student = await StudentRepository.create(data);
+            const student = await StudentRepository.create(data, options);
             Logger.log(`Student admitted: ${registrationNumber}`, Logger.Level.INFO);
             return student;
         } catch (error) {
@@ -76,7 +77,7 @@ class StudentService {
     /**
      * Create student session (on admission or promotion)
      */
-    async createStudentSession(data) {
+    async createStudentSession(data, options = {}) {
         try {
             // Generate password and hash it
             const password = generatePassword();
@@ -88,7 +89,7 @@ class StudentService {
                 defaultPassword: hashedPassword
             };
 
-            const session = await StudentSessionRepository.create(sessionData);
+            const session = await StudentSessionRepository.create(sessionData, options);
             Logger.log(`Student session created for student: ${data.studentId}`, Logger.Level.INFO);
 
             return {

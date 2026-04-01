@@ -152,6 +152,92 @@ class AdmissionTrackerController {
         }
     }
 
+    async downloadTemplate(req, res, next) {
+        try {
+            const fileType = `${req.query.type || 'xlsx'}`.toLowerCase();
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+            if (fileType === 'csv') {
+                const csv = AdmissionTrackerService.generateTemplateCsv();
+                res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+                res.setHeader('Content-Disposition', `attachment; filename="admission-template-${timestamp}.csv"`);
+                res.status(HTTP_CODES.OK).send(csv);
+                return;
+            }
+
+            const workbook = AdmissionTrackerService.generateTemplateWorkbook();
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', `attachment; filename="admission-template-${timestamp}.xlsx"`);
+            res.status(HTTP_CODES.OK).send(workbook);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async exportCsv(req, res, next) {
+        try {
+            const fileType = `${req.query.type || 'xlsx'}`.toLowerCase();
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+            if (fileType === 'csv') {
+                const csv = await AdmissionTrackerService.exportCsv(req.query || {});
+                res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+                res.setHeader('Content-Disposition', `attachment; filename="admission-records-${timestamp}.csv"`);
+                res.status(HTTP_CODES.OK).send(csv);
+                return;
+            }
+
+            const workbook = await AdmissionTrackerService.exportWorkbook(req.query || {});
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', `attachment; filename="admission-records-${timestamp}.xlsx"`);
+            res.status(HTTP_CODES.OK).send(workbook);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async bulkImport(req, res, next) {
+        try {
+            const rows = Array.isArray(req.body?.rows) ? req.body.rows : [];
+            if (rows.length === 0) {
+                throw new ApiError(HTTP_CODES.BAD_REQUEST, 'At least one row is required for bulk import');
+            }
+
+            const result = await AdmissionTrackerService.bulkAdmitStudents(req.user.organizationId, rows);
+            res.status(HTTP_CODES.OK).json({
+                success: true,
+                statusCode: HTTP_CODES.OK,
+                message: 'Bulk admission import processed',
+                data: result
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async bulkImportFile(req, res, next) {
+        try {
+            if (!req.file?.buffer) {
+                throw new ApiError(HTTP_CODES.BAD_REQUEST, 'Please upload an Excel or CSV file');
+            }
+
+            const rows = AdmissionTrackerService.parseWorkbook(req.file.buffer);
+            if (rows.length === 0) {
+                throw new ApiError(HTTP_CODES.BAD_REQUEST, 'The uploaded file does not contain any data rows');
+            }
+
+            const result = await AdmissionTrackerService.bulkAdmitStudents(req.user.organizationId, rows);
+            res.status(HTTP_CODES.OK).json({
+                success: true,
+                statusCode: HTTP_CODES.OK,
+                message: 'Bulk admission import processed',
+                data: result
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async update(req, res, next) {
         try {
             const { id } = req.params;

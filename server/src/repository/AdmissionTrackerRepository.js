@@ -5,8 +5,8 @@ import { buildFilterQuery, buildPaginationOptions } from '../utils/index.js';
  * Repository for AdmissionTracker operations
  */
 class AdmissionTrackerRepository {
-    async create(data) {
-        return new AdmissionTracker(data).save();
+    async create(data, options = {}) {
+        return new AdmissionTracker(data).save(options);
     }
 
     async findById(id) {
@@ -50,6 +50,37 @@ class AdmissionTrackerRepository {
         return { data, total, page: pagination.page, limit: pagination.limit };
     }
 
+    async findAllForExport(filters = {}) {
+        const allowedFields = ['fullName', 'fatherName', 'motherName', 'aadharNo', 'parentMobile'];
+        const { fromDate, toDate, ...otherFilters } = filters;
+        const query = {};
+
+        Object.assign(query, buildFilterQuery(otherFilters, allowedFields));
+
+        if (fromDate) {
+            const parsedFromDate = new Date(fromDate);
+            if (!Number.isNaN(parsedFromDate.getTime())) {
+                query.createdAt = { ...(query.createdAt || {}), $gte: parsedFromDate };
+            }
+        }
+
+        if (toDate) {
+            const parsedToDate = new Date(toDate);
+            if (!Number.isNaN(parsedToDate.getTime())) {
+                query.createdAt = { ...(query.createdAt || {}), $lte: parsedToDate };
+            }
+        }
+
+        return AdmissionTracker.find(query)
+            .populate('classId', 'name classCode')
+            .populate('sectionId', 'name')
+            .sort({ createdAt: -1 });
+    }
+
+    async findByAadhar(aadharNo, options = {}) {
+        return AdmissionTracker.findOne({ aadharNo }).session(options.session || null);
+    }
+
     async update(id, data) {
         return AdmissionTracker.findByIdAndUpdate(
             id,
@@ -60,8 +91,8 @@ class AdmissionTrackerRepository {
             .populate('sectionId', 'name');
     }
 
-    async delete(id) {
-        return AdmissionTracker.findByIdAndDelete(id);
+    async delete(id, options = {}) {
+        return AdmissionTracker.findByIdAndDelete(id, options);
     }
 }
 

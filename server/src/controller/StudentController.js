@@ -1,8 +1,10 @@
 import StudentService from '../service/StudentService.js';
 import AdmissionTrackerService from '../service/AdmissionTrackerService.js';
+import FeeService from '../service/FeeService.js';
 import { ApiError } from '../utils/error.js';
-import { ERROR_MESSAGES, SUCCESS_MESSAGES, HTTP_CODES, ALLOWED_ROLES_TO_ADMIT_STUDENT } from '../constants/index.js';
+import { ERROR_MESSAGES, SUCCESS_MESSAGES, HTTP_CODES, ALLOWED_ROLES_TO_ADMIT_STUDENT, FEE_STATUS, FEE_TYPES } from '../constants/index.js';
 import { Logger } from '../logger/logger.js';
+import mongoose from 'mongoose';
 
 /**
  * Controller for Student operations
@@ -43,67 +45,91 @@ class StudentController {
                 throw new ApiError(HTTP_CODES.BAD_REQUEST, 'Invalid age/date of birth');
             }
 
-            const student = await StudentService.admitStudent({
-                organizationId: req.user.organizationId,
-                fullName,
-                age: normalizedAge,
-                dateOfBirth: dateOfBirth || null,
-                gender,
-                bloodGroup,
-                mobile,
-                parentMobile,
-                studentEmail,
-                parentEmail,
-                fatherName,
-                motherName,
-                guardianName,
-                aadharNo,
-                parentAadharNumber,
-                parentAadharRelation,
-                fullAddress,
-                parentPic,
-                studentPic
-            });
+            const { classId, sectionId, year, admissionTrackerId, admissionFeeAmount, admissionFeeDueDate, feeRemarks } = req.body;
+            const dbSession = await mongoose.startSession();
 
-            const { classId, sectionId, year, admissionTrackerId } = req.body;
-            if (classId && year) {
-                const session = await StudentService.createStudentSession({
-                    organizationId: req.user.organizationId,
-                    studentId: student._id,
-                    classId,
-                    sectionId: sectionId || null,
-                    year,
-                    registrationNumber: student.registrationNumber
-                });
+            try {
+                let student;
+                let sessionResult = null;
 
-                if (admissionTrackerId) {
-                    await AdmissionTrackerService.delete(admissionTrackerId);
-                }
+                await dbSession.withTransaction(async () => {
+                    student = await StudentService.admitStudent({
+                        organizationId: req.user.organizationId,
+                        fullName,
+                        age: normalizedAge,
+                        dateOfBirth: dateOfBirth || null,
+                        gender,
+                        bloodGroup,
+                        mobile,
+                        parentMobile,
+                        studentEmail,
+                        parentEmail,
+                        fatherName,
+                        motherName,
+                        guardianName,
+                        aadharNo,
+                        parentAadharNumber,
+                        parentAadharRelation,
+                        fullAddress,
+                        parentPic,
+                        studentPic
+                    }, { session: dbSession });
 
-                res.status(HTTP_CODES.CREATED).json({
-                    success: true,
-                    statusCode: HTTP_CODES.CREATED,
-                    message: SUCCESS_MESSAGES.CREATED,
-                    data: {
-                        student,
-                        session: session.session,
-                        credentials: {
-                            registrationNumber: session.registrationNumber,
-                            password: session.password
+                    if (classId && year) {
+                        sessionResult = await StudentService.createStudentSession({
+                            organizationId: req.user.organizationId,
+                            studentId: student._id,
+                            classId,
+                            sectionId: sectionId || null,
+                            year,
+                            registrationNumber: student.registrationNumber
+                        }, { session: dbSession });
+
+                        if (admissionFeeAmount !== undefined && admissionFeeAmount !== null && admissionFeeAmount !== '') {
+                            await FeeService.create({
+                                organizationId: req.user.organizationId,
+                                studentId: student._id,
+                                studentSessionId: sessionResult.session._id,
+                                classId,
+                                sectionId: sectionId || null,
+                                type: FEE_TYPES.ADMISSION,
+                                amount: Number(admissionFeeAmount),
+                                dueDate: admissionFeeDueDate || new Date().toISOString().slice(0, 10),
+                                status: FEE_STATUS.PENDING,
+                                remarks: feeRemarks || 'Admission fee'
+                            }, { session: dbSession });
                         }
                     }
-                });
-            } else {
-                if (admissionTrackerId) {
-                    await AdmissionTrackerService.delete(admissionTrackerId);
-                }
 
-                res.status(HTTP_CODES.CREATED).json({
-                    success: true,
-                    statusCode: HTTP_CODES.CREATED,
-                    message: SUCCESS_MESSAGES.CREATED,
-                    data: { student }
+                    if (admissionTrackerId) {
+                        await AdmissionTrackerService.delete(admissionTrackerId, { session: dbSession });
+                    }
                 });
+
+                if (sessionResult) {
+                    res.status(HTTP_CODES.CREATED).json({
+                        success: true,
+                        statusCode: HTTP_CODES.CREATED,
+                        message: SUCCESS_MESSAGES.CREATED,
+                        data: {
+                            student,
+                            session: sessionResult.session,
+                            credentials: {
+                                registrationNumber: sessionResult.registrationNumber,
+                                password: sessionResult.password
+                            }
+                        }
+                    });
+                } else {
+                    res.status(HTTP_CODES.CREATED).json({
+                        success: true,
+                        statusCode: HTTP_CODES.CREATED,
+                        message: SUCCESS_MESSAGES.CREATED,
+                        data: { student }
+                    });
+                }
+            } finally {
+                await dbSession.endSession();
             }
         } catch (error) {
             next(error);

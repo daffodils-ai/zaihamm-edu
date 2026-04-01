@@ -25,11 +25,15 @@ const handleResponse = async (response) => {
 // Make HTTP request
 const request = async (url, options = {}) => {
   const token = storage.getToken();
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
   
   const headers = {
-    'Content-Type': 'application/json',
     ...options.headers,
   };
+
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -93,6 +97,14 @@ export const post = (url, data = {}, options = {}) => {
   return request(url, {
     method: 'POST',
     body: JSON.stringify(data),
+    ...options,
+  });
+};
+
+export const postForm = (url, formData, options = {}) => {
+  return request(url, {
+    method: 'POST',
+    body: formData,
     ...options,
   });
 };
@@ -250,6 +262,17 @@ export const admissions = {
   getById: (id) => get(`/admissions/${id}`),
   update: (id, admissionData) => put(`/admissions/${id}`, admissionData),
   delete: (id) => deleteRequest(`/admissions/${id}`),
+  downloadTemplate: (type = 'xlsx') => download(`/admissions/template/download?type=${type}`),
+  exportCsv: (filters = {}) => {
+    const query = new URLSearchParams({ ...filters, type: 'xlsx' });
+    return download(`/admissions/export${query.toString() ? `?${query}` : ''}`);
+  },
+  bulkImport: (rows) => post('/admissions/bulk-import', { rows }),
+  bulkImportFile: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return postForm('/admissions/bulk-import-file', formData);
+  },
 };
 
 // =====================
