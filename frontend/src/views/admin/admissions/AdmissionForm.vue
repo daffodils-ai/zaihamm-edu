@@ -55,6 +55,17 @@
             </div>
 
             <div class="col-md-6">
+              <CustomSelect
+                v-model="form.class"
+                label="Class"
+                :options="classOptions"
+                placeholder="Select class"
+                required
+                :error="errors.class"
+              />
+            </div>
+
+            <div class="col-md-6">
               <CustomInput
                 v-model="form.bloodGroup"
                 label="Blood Group"
@@ -192,6 +203,7 @@
 
           <div class="d-flex gap-2 mt-5">
             <CustomButton label="Save" variant="primary" size="lg" :is-loading="isLoading" @click="handleSubmit" />
+            <CustomButton label="Admit" variant="success" size="lg" :is-loading="isAdmitting" @click="handleAdmit" />
             <router-link to="/admin/admissions" class="btn btn-secondary btn-lg">Cancel</router-link>
           </div>
         </form>
@@ -202,19 +214,22 @@
 
 <script>
 import { mapActions } from 'vuex';
+import { classes } from '../../../api/api.js';
 import CustomInput from '../../../components/CustomInput.vue';
+import CustomSelect from '../../../components/CustomSelect.vue';
 import CustomButton from '../../../components/CustomButton.vue';
 import AlertComponent from '../../../components/AlertComponent.vue';
 import { getErrorMessage } from '../../../utils/validation.js';
 
 export default {
   name: 'AdmissionForm',
-  components: { CustomInput, CustomButton, AlertComponent },
+  components: { CustomInput, CustomSelect, CustomButton, AlertComponent },
   data() {
     return {
       form: {
         fullName: '',
         age: '',
+        class: '',
         bloodGroup: '',
         mobile: '',
         parentMobile: '',
@@ -232,7 +247,9 @@ export default {
       errors: {},
       successMessage: '',
       errorMessage: '',
-      isLoading: false
+      isLoading: false,
+      isAdmitting: false,
+      classOptions: []
     };
   },
   computed: {
@@ -242,6 +259,7 @@ export default {
   },
   methods: {
     ...mapActions('admissions', ['createAdmission', 'updateAdmission', 'fetchAdmissionById']),
+    ...mapActions('students', ['createStudent']),
     
     validateForm() {
       this.errors = {};
@@ -250,6 +268,7 @@ export default {
       if (!this.form.age || this.form.age < 0 || this.form.age > 150) {
         this.errors.age = 'Valid age is required (0-150)';
       }
+      if (!this.form.class) this.errors.class = 'Class is required';
       if (!this.form.parentMobile) this.errors.parentMobile = 'Parent mobile is required';
       if (!this.form.fatherName) this.errors.fatherName = "Father's name is required";
       if (!this.form.motherName) this.errors.motherName = "Mother's name is required";
@@ -272,6 +291,7 @@ export default {
           this.form = {
             fullName: admission.fullName || '',
             age: admission.age || '',
+            class: admission.class || '',
             bloodGroup: admission.bloodGroup || '',
             mobile: admission.mobile || '',
             parentMobile: admission.parentMobile || '',
@@ -290,6 +310,20 @@ export default {
         this.errorMessage = getErrorMessage(error);
       } finally {
         this.isLoading = false;
+      }
+    },
+
+    async loadClassOptions() {
+      try {
+        const response = await classes.getAll(1, 200);
+        if (response?.success && response.data) {
+          this.classOptions = response.data.map((item) => ({
+            value: item.name,
+            label: item.classCode ? `${item.name} (${item.classCode})` : item.name
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to load classes:', error);
       }
     },
 
@@ -317,10 +351,52 @@ export default {
       } finally {
         this.isLoading = false;
       }
+    },
+
+    async handleAdmit() {
+      if (!this.validateForm()) return;
+      
+      try {
+        this.isAdmitting = true;
+        this.errorMessage = '';
+        
+        // Prepare student data from admission form
+        const studentData = {
+          fullName: this.form.fullName,
+          age: Number(this.form.age),
+          class: this.form.class,
+          bloodGroup: this.form.bloodGroup,
+          mobile: this.form.mobile,
+          parentMobile: this.form.parentMobile,
+          studentEmail: this.form.studentEmail,
+          parentEmail: this.form.parentEmail,
+          fatherName: this.form.fatherName,
+          motherName: this.form.motherName,
+          guardianName: this.form.guardianName,
+          aadharNo: this.form.aadharNo,
+          parentAadharNumber: this.form.parentAadharNumber,
+          parentAadharRelation: this.form.parentAadharRelation,
+          fullAddress: this.form.fullAddress
+        };
+        
+        const response = await this.createStudent(studentData);
+        
+        if (response?.success) {
+          this.successMessage = 'Student admitted successfully';
+          setTimeout(() => this.$router.push('/admin/students'), 2000);
+        } else {
+          this.errorMessage = response?.message || 'Failed to admit student';
+        }
+      } catch (error) {
+        this.errorMessage = getErrorMessage(error);
+      } finally {
+        this.isAdmitting = false;
+      }
     }
   },
   
   mounted() {
+    this.loadClassOptions();
     if (this.isEditMode) {
       this.loadAdmission();
     }

@@ -114,8 +114,7 @@
               <td v-format-date="admission.createdAt"></td>
               <td>
                 <div class="btn-group btn-group-sm">
-                  <button class="btn btn-outline-success">Admit</button>
-                  <router-link :to="`/admin/admissions/${admission._id}/edit`" class="btn btn-outline-warning">✏️</router-link>
+                  <router-link :to="`/admin/admissions/${admission._id}/edit`" class="btn btn-outline-warning">Admit</router-link>
                   <button class="btn btn-outline-danger" @click="onDeleteAdmission(admission._id)">🗑️</button>
                 </div>
               </td>

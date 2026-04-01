@@ -11,6 +11,7 @@ class AdmissionTrackerController {
             const {
                 fullName,
                 age,
+                class: studentClass,
                 bloodGroup,
                 mobile,
                 parentMobile,
@@ -26,7 +27,7 @@ class AdmissionTrackerController {
             } = req.body;
 
             // Validate required fields
-            if (!fullName || !age || !parentMobile || !fatherName || !motherName || !aadharNo || !parentAadharNumber || !parentAadharRelation || !fullAddress) {
+            if (!fullName || !age || !studentClass || !parentMobile || !fatherName || !motherName || !aadharNo || !parentAadharNumber || !parentAadharRelation || !fullAddress) {
                 throw new ApiError(HTTP_CODES.BAD_REQUEST, ERROR_MESSAGES.INVALID_REQUEST);
             }
 
@@ -44,6 +45,7 @@ class AdmissionTrackerController {
             const admission = await AdmissionTrackerService.create({
                 fullName,
                 age,
+                class: studentClass,
                 bloodGroup,
                 mobile,
                 parentMobile,

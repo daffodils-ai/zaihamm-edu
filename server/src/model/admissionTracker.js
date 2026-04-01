@@ -11,6 +11,11 @@ const studentSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    class: {
+        type: String,
+        required: true,
+        trim: true
+    },
     bloodGroup: {
         type: String,
         trim: true
