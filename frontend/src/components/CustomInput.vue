@@ -10,6 +10,7 @@
       :class="['form-control', { 'is-invalid': error }]"
       :placeholder="placeholder"
       :disabled="disabled"
+      :readonly="readonly"
       :required="required"
       @input="$emit('update:modelValue', $event.target.value)"
       @blur="$emit('blur')"
@@ -46,6 +47,10 @@ export default {
       default: false
     },
     disabled: {
+      type: Boolean,
+      default: false
+    },
+    readonly: {
       type: Boolean,
       default: false
     },

@@ -43,23 +43,24 @@
             
             <div class="col-md-6">
               <CustomInput
-                v-model.number="form.age"
-                label="Age"
-                type="number"
-                placeholder="Enter age"
+                v-model="form.dateOfBirth"
+                label="Date of Birth"
+                type="date"
                 required
-                :error="errors.age"
-                min="0"
-                max="150"
+                :error="errors.dateOfBirth"
+                @update:modelValue="updateAgeFromDob"
               />
             </div>
 
             <div class="col-md-6">
               <CustomInput
-                v-model="form.dateOfBirth"
-                label="Date of Birth"
-                type="date"
-                :error="errors.dateOfBirth"
+                v-model.number="form.age"
+                label="Age"
+                type="number"
+                placeholder="Auto-calculated from date of birth"
+                required
+                :error="errors.age"
+                readonly
               />
             </div>
 
@@ -308,18 +309,6 @@ export default {
     }
   },
   watch: {
-    'form.dateOfBirth'(newValue) {
-      if (!newValue) {
-        this.form.age = '';
-        return;
-      }
-
-      const today = new Date();
-      const birthDate = new Date(newValue);
-      const diffMs = today.getTime() - birthDate.getTime();
-      const yearMs = 365.2425 * 24 * 60 * 60 * 1000;
-      this.form.age = Math.max(Math.floor(diffMs / yearMs), 0);
-    },
     'form.classId'(newValue) {
       if (!newValue) {
         this.form.sectionId = '';
@@ -338,6 +327,22 @@ export default {
   methods: {
     ...mapActions('admissions', ['createAdmission', 'updateAdmission', 'fetchAdmissionById']),
     ...mapActions('students', ['createStudent']),
+
+    calculateAgeFromDob(dateOfBirth) {
+      if (!dateOfBirth) return '';
+
+      const today = new Date();
+      const birthDate = new Date(dateOfBirth);
+      const diffMs = today.getTime() - birthDate.getTime();
+      const yearMs = 365.2425 * 24 * 60 * 60 * 1000;
+
+      return Math.max(Math.floor(diffMs / yearMs), 0);
+    },
+
+    updateAgeFromDob(value) {
+      this.form.dateOfBirth = value;
+      this.form.age = this.calculateAgeFromDob(value);
+    },
     
     validateForm() {
       this.errors = {};
@@ -371,8 +376,8 @@ export default {
           const matchedClass = this.classOptions.find((item) => item.name === admission.class);
           this.form = {
             fullName: admission.fullName || '',
-            age: admission.age || '',
             dateOfBirth: admission.dateOfBirth ? String(admission.dateOfBirth).slice(0, 10) : '',
+            age: this.calculateAgeFromDob(admission.dateOfBirth ? String(admission.dateOfBirth).slice(0, 10) : '') || admission.age || '',
             class: admission.class || '',
             classId: admission.classId?._id || admission.classId || matchedClass?.value || '',
             sectionId: admission.sectionId?._id || admission.sectionId || '',
