@@ -73,6 +73,14 @@
             </div>
             <div class="col-md-6">
               <CustomInput
+                v-model="form.parentAadharNumber"
+                label="Parent Aadhar No."
+                placeholder="12-digit parent Aadhar number"
+                :error="errors.parentAadharNumber"
+              />
+            </div>
+            <div class="col-md-6">
+              <CustomInput
                 v-model="form.bloodGroup"
                 label="Blood Group"
                 placeholder="e.g., O+, B-, AB+"
@@ -111,6 +119,24 @@
                 type="tel"
                 placeholder="Parent mobile number"
                 :error="errors.parentMobile"
+              />
+            </div>
+            <div class="col-md-6">
+              <CustomSelect
+                v-model="form.parentAadharRelation"
+                label="Parent Aadhar Relation"
+                :options="parentAadharRelationOptions"
+                placeholder="Select relation"
+                required
+                :error="errors.parentAadharRelation"
+              />
+            </div>
+            <div class="col-md-6">
+              <CustomInput
+                v-model="form.guardianName"
+                label="Guardian Name"
+                placeholder="Guardian name if applicable"
+                :error="errors.guardianName"
               />
             </div>
             <div class="col-12">
@@ -163,11 +189,12 @@
 
 <script>
 import { mapActions } from 'vuex';
+import { classes, sections } from '../../../api/api.js';
 import CustomInput from '../../../components/CustomInput.vue';
 import CustomSelect from '../../../components/CustomSelect.vue';
 import CustomButton from '../../../components/CustomButton.vue';
 import AlertComponent from '../../../components/AlertComponent.vue';
-import { getErrorMessage } from '../../../utils/validation.js';
+import { getErrorMessage, validateAadhar, validatePhone } from '../../../utils/validation.js';
 
 export default {
   name: 'StudentForm',
@@ -185,9 +212,12 @@ export default {
         studentEmail: '',
         mobile: '',
         aadharNo: '',
+        parentAadharNumber: '',
+        parentAadharRelation: '',
         bloodGroup: '',
         fatherName: '',
         motherName: '',
+        guardianName: '',
         parentEmail: '',
         parentMobile: '',
         fullAddress: '',
@@ -199,24 +229,70 @@ export default {
       successMessage: '',
       errorMessage: '',
       isLoading: false,
-      classOptions: [
-        { value: '1', label: 'Class 10-A' },
-        { value: '2', label: 'Class 10-B' },
-        { value: '3', label: 'Class 9-A' }
-      ],
-      sectionOptions: [
-        { value: '1', label: 'Section A' },
-        { value: '2', label: 'Section B' }
+      classOptions: [],
+      allSections: [],
+      parentAadharRelationOptions: [
+        { value: 'father', label: 'Father' },
+        { value: 'mother', label: 'Mother' },
+        { value: 'brother', label: 'Brother' },
+        { value: 'sister', label: 'Sister' },
+        { value: 'other', label: 'Other' }
       ]
     };
   },
   computed: {
     isEditMode() {
       return !!this.$route.params.id;
+    },
+    sectionOptions() {
+      const items = this.form.classId
+        ? this.allSections.filter((section) => section.classId === this.form.classId)
+        : this.allSections;
+
+      return items.map((section) => ({
+        value: section._id,
+        label: section.className ? `${section.name} (${section.className})` : section.name
+      }));
+    }
+  },
+  watch: {
+    'form.classId'(newValue) {
+      if (!newValue) {
+        this.form.sectionId = '';
+        return;
+      }
+
+      const validSection = this.allSections.some(
+        (section) => section._id === this.form.sectionId && section.classId === newValue
+      );
+
+      if (!validSection) {
+        this.form.sectionId = '';
+      }
     }
   },
   methods: {
     ...mapActions('students', ['createStudent', 'updateStudent', 'fetchStudentById']),
+
+    async loadDropdownData() {
+      const [classesResponse, sectionsResponse] = await Promise.all([
+        classes.getAll(1, 200),
+        sections.getAll(1, 200)
+      ]);
+
+      const classData = classesResponse?.data || [];
+      this.classOptions = classData.map((item) => ({
+        value: item._id,
+        label: item.classCode ? `${item.name} (${item.classCode})` : item.name
+      }));
+
+      const classMap = Object.fromEntries(classData.map((item) => [item._id, item.name]));
+      this.allSections = (sectionsResponse?.data || []).map((item) => ({
+        ...item,
+        classId: item.classId?._id || item.classId,
+        className: classMap[item.classId?._id || item.classId] || ''
+      }));
+    },
 
     validateForm() {
       this.errors = {};
@@ -224,6 +300,30 @@ export default {
       if (!this.form.age || this.form.age < 5 || this.form.age > 30) {
         this.errors.age = 'Valid age is required';
       }
+      if (!this.form.fatherName) this.errors.fatherName = 'Father name is required';
+      if (!this.form.motherName) this.errors.motherName = 'Mother name is required';
+      if (!this.form.parentMobile) {
+        this.errors.parentMobile = 'Parent mobile is required';
+      } else if (!validatePhone(this.form.parentMobile)) {
+        this.errors.parentMobile = 'Parent mobile must be a valid 10-digit number';
+      }
+      if (this.form.mobile && !validatePhone(this.form.mobile)) {
+        this.errors.mobile = 'Mobile must be a valid 10-digit number';
+      }
+      if (!this.form.aadharNo) {
+        this.errors.aadharNo = 'Aadhar number is required';
+      } else if (!validateAadhar(this.form.aadharNo)) {
+        this.errors.aadharNo = 'Aadhar number must be 12 digits';
+      }
+      if (!this.form.parentAadharNumber) {
+        this.errors.parentAadharNumber = 'Parent Aadhar number is required';
+      } else if (!validateAadhar(this.form.parentAadharNumber)) {
+        this.errors.parentAadharNumber = 'Parent Aadhar number must be 12 digits';
+      }
+      if (!this.form.parentAadharRelation) {
+        this.errors.parentAadharRelation = 'Parent Aadhar relation is required';
+      }
+      if (!this.form.fullAddress) this.errors.fullAddress = 'Full address is required';
       if (!this.form.classId) this.errors.classId = 'Class is required';
       if (!this.form.sectionId) this.errors.sectionId = 'Section is required';
       return Object.keys(this.errors).length === 0;
@@ -260,13 +360,18 @@ export default {
     }
   },
   async mounted() {
-    if (this.isEditMode) {
-      try {
+    try {
+      this.isLoading = true;
+      await this.loadDropdownData();
+
+      if (this.isEditMode) {
         await this.fetchStudentById(this.$route.params.id);
         // Populate form with fetched data
-      } catch (error) {
-        console.error('Error fetching student:', error);
       }
+    } catch (error) {
+      this.errorMessage = getErrorMessage(error);
+    } finally {
+      this.isLoading = false;
     }
   }
 };

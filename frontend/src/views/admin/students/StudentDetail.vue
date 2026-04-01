@@ -57,8 +57,8 @@
               <tr>
                 <td class="fw-bold">Status:</td>
                 <td>
-                  <span :class="['badge', student.is_active ? 'bg-success' : 'bg-danger']">
-                    {{ student.is_active ? 'Active' : 'Inactive' }}
+                  <span :class="['badge', studentActive ? 'bg-success' : 'bg-danger']">
+                    {{ studentActive ? 'Active' : 'Inactive' }}
                   </span>
                 </td>
               </tr>
@@ -151,6 +151,9 @@ export default {
 
     student() {
       return this.studentDetail;
+    },
+    studentActive() {
+      return this.student?.isActive ?? this.student?.is_active ?? false;
     },
 
     isLoading() {

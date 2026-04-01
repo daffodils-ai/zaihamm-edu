@@ -19,6 +19,8 @@ class StudentSessionRepository {
 
     async findLatestByStudent(studentId) {
         return StudentSession.findOne({ studentId })
+            .populate('classId', 'name classCode')
+            .populate('sectionId', 'name')
             .sort({ year: -1 })
             .limit(1);
     }

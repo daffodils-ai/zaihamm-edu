@@ -49,6 +49,37 @@ const request = async (url, options = {}) => {
   }
 };
 
+const requestBlob = async (url, options = {}) => {
+  const token = storage.getToken();
+  const headers = {
+    ...options.headers,
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}${url}`, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    let errorData = {};
+    try {
+      errorData = await response.json();
+    } catch {
+      errorData = { message: `HTTP ${response.status}` };
+    }
+    const error = new Error(errorData.message || `HTTP ${response.status}`);
+    error.status = response.status;
+    error.data = errorData;
+    throw error;
+  }
+
+  return response.blob();
+};
+
 // GET request
 export const get = (url, options = {}) => {
   return request(url, {
@@ -79,6 +110,13 @@ export const put = (url, data = {}, options = {}) => {
 export const deleteRequest = (url, options = {}) => {
   return request(url, {
     method: 'DELETE',
+    ...options,
+  });
+};
+
+export const download = (url, options = {}) => {
+  return requestBlob(url, {
+    method: 'GET',
     ...options,
   });
 };
@@ -272,6 +310,23 @@ export const fees = {
   getPendingReport: () => get('/fees/report/pending'),
   getOverdueReport: () => get('/fees/report/overdue'),
   generateMonthly: (amount, dueDate) => post('/fees/generate/monthly', { amount, dueDate }),
+};
+
+// =====================
+// Exam Result APIs
+// =====================
+
+export const examResults = {
+  create: (payload) => post('/exam-results', payload),
+  getAll: (page = 1, limit = 10, filters = {}) => {
+    const query = new URLSearchParams({ page, limit, ...filters });
+    return get(`/exam-results?${query}`);
+  },
+  getById: (id) => get(`/exam-results/${id}`),
+  update: (id, payload) => put(`/exam-results/${id}`, payload),
+  delete: (id) => deleteRequest(`/exam-results/${id}`),
+  finalize: (id) => put(`/exam-results/${id}/finalize`),
+  downloadPdf: (id) => download(`/exam-results/${id}/pdf`),
 };
 
 // =====================

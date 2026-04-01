@@ -23,6 +23,8 @@ const NoticeList = () => import('../views/admin/notices/NoticeList.vue');
 const NoticeForm = () => import('../views/admin/notices/NoticeForm.vue');
 const FeeList = () => import('../views/admin/fees/FeeList.vue');
 const FeeForm = () => import('../views/admin/fees/FeeForm.vue');
+const ExamResultList = () => import('../views/admin/examResults/ExamResultList.vue');
+const ExamResultForm = () => import('../views/admin/examResults/ExamResultForm.vue');
 const OrganizationUserList = () => import('../views/admin/users/OrganizationUserList.vue');
 const OrganizationUserForm = () => import('../views/admin/users/OrganizationUserForm.vue');
 const StudentPortal = () => import('../views/student/StudentPortal.vue');
@@ -202,6 +204,26 @@ const routes = [
         name: 'FeeEdit',
         component: FeeForm,
         meta: { title: 'Edit Fee' }
+      },
+
+      // Exam Results
+      {
+        path: 'exam-results',
+        name: 'ExamResultList',
+        component: ExamResultList,
+        meta: { title: 'Exam Results' }
+      },
+      {
+        path: 'exam-results/new',
+        name: 'ExamResultNew',
+        component: ExamResultForm,
+        meta: { title: 'Add Exam Result' }
+      },
+      {
+        path: 'exam-results/:id/edit',
+        name: 'ExamResultEdit',
+        component: ExamResultForm,
+        meta: { title: 'Edit Exam Result' }
       },
 
       // Organization Users

@@ -68,6 +68,14 @@
             <i class="icon">💰</i>
             <span>Fees</span>
           </router-link>
+          <router-link
+            to="/admin/exam-results"
+            class="nav-link"
+            :class="{ active: $route.path.includes('/exam-results') }"
+          >
+            <i class="icon">🧾</i>
+            <span>Exam Results</span>
+          </router-link>
         </div>
 
         <div class="nav-section">

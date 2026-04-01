@@ -10,6 +10,21 @@ import { Logger } from '../logger/logger.js';
  * Service for Student operations
  */
 class StudentService {
+    async enrichStudentWithLatestSession(student) {
+        if (!student) return null;
+
+        const latestSession = await StudentSessionRepository.findLatestByStudent(student._id);
+        const studentObject = typeof student.toObject === 'function' ? student.toObject() : { ...student };
+
+        return {
+            ...studentObject,
+            class: latestSession?.classId || null,
+            section: latestSession?.sectionId || null,
+            year: latestSession?.year || null,
+            latestSession
+        };
+    }
+
     /**
      * Admit new student
      */
@@ -120,7 +135,7 @@ class StudentService {
             if (!student) {
                 throw new ApiError(HTTP_CODES.NOT_FOUND, ERROR_MESSAGES.STUDENT_NOT_FOUND);
             }
-            return student;
+            return await this.enrichStudentWithLatestSession(student);
         } catch (error) {
             Logger.log(`Error fetching student: ${error.message}`, Logger.Level.ERROR);
             throw error;
@@ -132,7 +147,15 @@ class StudentService {
      */
     async getAllStudents(organizationId, filters = {}, page = 1, limit = 10) {
         try {
-            return await StudentRepository.findAll(organizationId, filters, page, limit);
+            const result = await StudentRepository.findAll(organizationId, filters, page, limit);
+            const data = await Promise.all(
+                result.data.map((student) => this.enrichStudentWithLatestSession(student))
+            );
+
+            return {
+                ...result,
+                data
+            };
         } catch (error) {
             Logger.log(`Error fetching students: ${error.message}`, Logger.Level.ERROR);
             throw error;

@@ -111,9 +111,9 @@
               <td><small>{{ student.studentEmail || '-' }}</small></td>
               <td>
                 <span
-                  :class="['badge', student.is_active ? 'bg-success' : 'bg-danger']"
+                  :class="['badge', isStudentActive(student) ? 'bg-success' : 'bg-danger']"
                 >
-                  {{ student.is_active ? 'Active' : 'Inactive' }}
+                  {{ isStudentActive(student) ? 'Active' : 'Inactive' }}
                 </span>
               </td>
               <td>
@@ -181,6 +181,7 @@
 
 <script>
 import { mapState, mapGetters, mapActions } from 'vuex';
+import { classes } from '../../../api/api.js';
 import CustomInput from '../../../components/CustomInput.vue';
 import CustomSelect from '../../../components/CustomSelect.vue';
 import AlertComponent from '../../../components/AlertComponent.vue';
@@ -200,12 +201,7 @@ export default {
         registrationNumber: '',
         class: ''
       },
-      classOptions: [
-        { value: '10-A', label: 'Class 10-A' },
-        { value: '10-B', label: 'Class 10-B' },
-        { value: '9-A', label: 'Class 9-A' },
-        { value: '9-B', label: 'Class 9-B' }
-      ],
+      classOptions: [],
       selectedStudents: [],
       selectAll: false,
       successMessage: '',
@@ -220,7 +216,7 @@ export default {
     selectedStudentsActive() {
       if (this.selectedStudents.length === 0) return true;
       const firstStudent = this.students.find((s) => s._id === this.selectedStudents[0]);
-      return firstStudent?.is_active;
+      return this.isStudentActive(firstStudent);
     }
   },
   watch: {
@@ -233,7 +229,23 @@ export default {
     }
   },
   methods: {
-    ...mapActions('students', ['fetchStudents', 'updateStudent', 'deleteStudent']),
+    ...mapActions('students', {
+      fetchStudents: 'fetchStudents',
+      updateStudentAction: 'updateStudent',
+      deleteStudentAction: 'deleteStudent'
+    }),
+
+    isStudentActive(student) {
+      return student?.isActive ?? student?.is_active ?? false;
+    },
+
+    async loadClassOptions() {
+      const response = await classes.getAll(1, 200);
+      this.classOptions = (response?.data || []).map((item) => ({
+        value: item._id,
+        label: item.classCode ? `${item.name} (${item.classCode})` : item.name
+      }));
+    },
 
     async applyFilters() {
       try {
@@ -282,7 +294,7 @@ export default {
       if (!confirm('Are you sure you want to delete this student?')) return;
 
       try {
-        await this.deleteStudent(id);
+        await this.deleteStudentAction(id);
         this.successMessage = 'Student deleted successfully';
         this.refreshList();
       } catch (error) {
@@ -295,7 +307,7 @@ export default {
 
       try {
         for (const id of this.selectedStudents) {
-          await this.deleteStudent(id);
+          await this.deleteStudentAction(id);
         }
         this.successMessage = 'Students deleted successfully';
         this.selectedStudents = [];
@@ -312,7 +324,7 @@ export default {
         if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} selected students?`)) return;
 
         for (const id of this.selectedStudents) {
-          await this.updateStudent({
+          await this.updateStudentAction({
             id,
             data: { is_active: !this.selectedStudentsActive }
           });
@@ -326,8 +338,13 @@ export default {
       }
     }
   },
-  mounted() {
-    this.applyFilters();
+  async mounted() {
+    try {
+      await this.loadClassOptions();
+      await this.applyFilters();
+    } catch (error) {
+      this.errorMessage = getErrorMessage(error);
+    }
   }
 };
 </script>
