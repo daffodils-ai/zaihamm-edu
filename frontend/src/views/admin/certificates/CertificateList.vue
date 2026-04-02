@@ -49,34 +49,75 @@
                 :error="generateErrors.sectionId"
               />
             </div>
-            <div class="col-md-4">
-              <CustomInput
-                v-model="studentSearch"
-                label="Student Search"
-                placeholder="Search selected class/section students"
-              />
-            </div>
             <div class="col-md-6">
-              <CustomSelect
-                v-model="generateForm.studentIds"
-                label="Students"
-                :options="filteredStudentOptions"
-                :multiple="true"
-                :size="8"
-                :disabled="!generateForm.classId"
-                :error="generateErrors.studentIds"
-              />
+              <label class="form-label">Students</label>
+              <div ref="studentDropdown" class="multi-select">
+                <button
+                  type="button"
+                  :class="['multi-select-trigger', { 'is-invalid': generateErrors.studentIds, open: studentDropdownOpen }]"
+                  :disabled="!generateForm.classId"
+                  @click="toggleStudentDropdown"
+                >
+                  <span>{{ selectedStudentsLabel }}</span>
+                  <span class="multi-select-caret">{{ studentDropdownOpen ? '▲' : '▼' }}</span>
+                </button>
+
+                <div v-if="studentDropdownOpen" class="multi-select-menu">
+                  <div class="multi-select-actions">
+                    <button type="button" class="btn btn-link btn-sm p-0" @click="selectAllStudents">Select All</button>
+                    <button type="button" class="btn btn-link btn-sm p-0" @click="clearAllStudents">Clear All</button>
+                  </div>
+
+                  <label
+                    v-for="option in filteredStudentOptions"
+                    :key="option.value"
+                    class="multi-select-option"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="generateForm.studentIds.includes(option.value)"
+                      @change="toggleStudentSelection(option.value)"
+                    />
+                    <span>{{ option.label }}</span>
+                  </label>
+                </div>
+              </div>
+              <small v-if="generateErrors.studentIds" class="text-danger d-block mt-2">{{ generateErrors.studentIds }}</small>
               <small class="text-muted">Leave empty to generate for all students in the selected class/section.</small>
             </div>
             <div class="col-md-6">
-              <CustomSelect
-                v-model="generateForm.certificateNames"
-                label="Certificate Types"
-                :options="certificateOptions"
-                :multiple="true"
-                :size="6"
-                :error="generateErrors.certificateNames"
-              />
+              <label class="form-label">Certificate Types</label>
+              <div ref="certificateDropdown" class="multi-select">
+                <button
+                  type="button"
+                  :class="['multi-select-trigger', { 'is-invalid': generateErrors.certificateNames, open: certificateDropdownOpen }]"
+                  @click="toggleCertificateDropdown"
+                >
+                  <span>{{ selectedCertificateLabel }}</span>
+                  <span class="multi-select-caret">{{ certificateDropdownOpen ? '▲' : '▼' }}</span>
+                </button>
+
+                <div v-if="certificateDropdownOpen" class="multi-select-menu">
+                  <div class="multi-select-actions">
+                    <button type="button" class="btn btn-link btn-sm p-0" @click="selectAllCertificates">Select All</button>
+                    <button type="button" class="btn btn-link btn-sm p-0" @click="clearAllCertificates">Clear All</button>
+                  </div>
+
+                  <label
+                    v-for="option in certificateOptions"
+                    :key="option.value"
+                    class="multi-select-option"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="generateForm.certificateNames.includes(option.value)"
+                      @change="toggleCertificateSelection(option.value)"
+                    />
+                    <span>{{ option.label }}</span>
+                  </label>
+                </div>
+              </div>
+              <small v-if="generateErrors.certificateNames" class="text-danger d-block mt-2">{{ generateErrors.certificateNames }}</small>
             </div>
             <div class="col-12">
               <label class="form-label">Remarks</label>
@@ -223,7 +264,6 @@
 <script>
 import { certificates, classes, sections, students } from '../../../api/api.js';
 import AlertComponent from '../../../components/AlertComponent.vue';
-import CustomInput from '../../../components/CustomInput.vue';
 import CustomSelect from '../../../components/CustomSelect.vue';
 import { getErrorMessage } from '../../../utils/validation.js';
 
@@ -236,14 +276,15 @@ const CERTIFICATE_LABELS = {
 
 export default {
   name: 'CertificateList',
-  components: { AlertComponent, CustomInput, CustomSelect },
+  components: { AlertComponent, CustomSelect },
   data() {
     return {
       classOptions: [],
       allSections: [],
       allStudents: [],
-      studentSearch: '',
       certificateOptions: [],
+      studentDropdownOpen: false,
+      certificateDropdownOpen: false,
       generateForm: {
         classId: '',
         sectionId: '',
@@ -293,16 +334,30 @@ export default {
       });
     },
     filteredStudentOptions() {
-      const needle = this.studentSearch.trim().toLowerCase();
       return this.candidateStudents
-        .filter((student) => {
-          if (!needle) return true;
-          return `${student.fullName} ${student.registrationNumber}`.toLowerCase().includes(needle);
-        })
         .map((student) => ({
           value: student._id,
           label: student.registrationNumber ? `${student.fullName} (${student.registrationNumber})` : student.fullName
         }));
+    },
+    selectedStudentsLabel() {
+      if (!this.generateForm.classId) return 'Select class first';
+      if (!this.generateForm.studentIds.length) return 'Select students';
+      if (this.generateForm.studentIds.length === this.filteredStudentOptions.length) return 'All students selected';
+
+      return this.filteredStudentOptions
+        .filter((option) => this.generateForm.studentIds.includes(option.value))
+        .map((option) => option.label)
+        .join(', ');
+    },
+    selectedCertificateLabel() {
+      if (!this.generateForm.certificateNames.length) return 'Select certificate types';
+      if (this.generateForm.certificateNames.length === this.certificateOptions.length) return 'All certificate types selected';
+
+      return this.certificateOptions
+        .filter((option) => this.generateForm.certificateNames.includes(option.value))
+        .map((option) => option.label)
+        .join(', ');
     },
     filterStudentOptions() {
       return this.allStudents
@@ -321,9 +376,11 @@ export default {
     'generateForm.classId'() {
       this.generateForm.sectionId = '';
       this.generateForm.studentIds = [];
+      this.studentDropdownOpen = false;
     },
     'generateForm.sectionId'() {
       this.generateForm.studentIds = [];
+      this.studentDropdownOpen = false;
     },
     'filters.classId'() {
       this.filters.sectionId = '';
@@ -334,6 +391,53 @@ export default {
     }
   },
   methods: {
+    toggleStudentDropdown() {
+      if (!this.generateForm.classId) return;
+      this.studentDropdownOpen = !this.studentDropdownOpen;
+      if (this.studentDropdownOpen) {
+        this.certificateDropdownOpen = false;
+      }
+    },
+    toggleCertificateDropdown() {
+      this.certificateDropdownOpen = !this.certificateDropdownOpen;
+      if (this.certificateDropdownOpen) {
+        this.studentDropdownOpen = false;
+      }
+    },
+    toggleStudentSelection(value) {
+      if (this.generateForm.studentIds.includes(value)) {
+        this.generateForm.studentIds = this.generateForm.studentIds.filter((item) => item !== value);
+        return;
+      }
+      this.generateForm.studentIds = [...this.generateForm.studentIds, value];
+    },
+    toggleCertificateSelection(value) {
+      if (this.generateForm.certificateNames.includes(value)) {
+        this.generateForm.certificateNames = this.generateForm.certificateNames.filter((item) => item !== value);
+        return;
+      }
+      this.generateForm.certificateNames = [...this.generateForm.certificateNames, value];
+    },
+    selectAllStudents() {
+      this.generateForm.studentIds = this.filteredStudentOptions.map((option) => option.value);
+    },
+    clearAllStudents() {
+      this.generateForm.studentIds = [];
+    },
+    selectAllCertificates() {
+      this.generateForm.certificateNames = this.certificateOptions.map((option) => option.value);
+    },
+    clearAllCertificates() {
+      this.generateForm.certificateNames = [];
+    },
+    handleClickOutside(event) {
+      if (this.$refs.studentDropdown && !this.$refs.studentDropdown.contains(event.target)) {
+        this.studentDropdownOpen = false;
+      }
+      if (this.$refs.certificateDropdown && !this.$refs.certificateDropdown.contains(event.target)) {
+        this.certificateDropdownOpen = false;
+      }
+    },
     formatCertificateName(value) {
       return CERTIFICATE_LABELS[value] || value;
     },
@@ -356,34 +460,40 @@ export default {
       window.URL.revokeObjectURL(url);
     },
     async loadDropdownData() {
-      const [classResponse, sectionResponse, studentResponse, certificateResponse] = await Promise.all([
-        classes.getAll(1, 200),
-        sections.getAll(1, 200),
-        students.getAll(1, 500),
-        certificates.getOptions()
-      ]);
+      try {
+        const [classResponse, sectionResponse, studentResponse, certificateResponse] = await Promise.all([
+          classes.getAll(1, 200),
+          sections.getAll(1, 200),
+          students.getAll(1, 500),
+          certificates.getOptions()
+        ]);
 
-      const classData = classResponse?.data || [];
-      this.classOptions = classData.map((item) => ({
-        value: item._id,
-        label: item.classCode ? `${item.name} (${item.classCode})` : item.name
-      }));
+        const classData = classResponse?.data || [];
+        this.classOptions = classData.map((item) => ({
+          value: item._id,
+          label: item.classCode ? `${item.name} (${item.classCode})` : item.name
+        }));
 
-      this.allSections = (sectionResponse?.data || []).map((item) => ({
-        ...item,
-        classId: item.classId?._id || item.classId
-      }));
+        this.allSections = (sectionResponse?.data || []).map((item) => ({
+          ...item,
+          classId: item.classId?._id || item.classId
+        }));
 
-      this.allStudents = (studentResponse?.data || []).map((item) => ({
-        ...item,
-        classId: item.class?._id || item.latestSession?.classId?._id || item.latestSession?.classId || '',
-        sectionId: item.section?._id || item.latestSession?.sectionId?._id || item.latestSession?.sectionId || ''
-      }));
+        this.allStudents = (studentResponse?.data || []).map((item) => ({
+          ...item,
+          classId: item.class?._id || item.latestSession?.classId?._id || item.latestSession?.classId || '',
+          sectionId: item.section?._id || item.latestSession?.sectionId?._id || item.latestSession?.sectionId || ''
+        }));
 
-      this.certificateOptions = (certificateResponse?.data || []).map((value) => ({
-        value,
-        label: this.formatCertificateName(value)
-      }));
+        this.certificateOptions = (certificateResponse?.data || []).map((value) => ({
+          value,
+          label: this.formatCertificateName(value)
+        }));
+      } catch (error) {
+        console.error('Error loading dropdown data:', error);
+        this.errorMessage = 'Failed to load form options. Some fields may be empty.';
+        throw error;
+      }
     },
     validateGenerateForm() {
       this.generateErrors = {};
@@ -420,7 +530,8 @@ export default {
       }
     },
     async fetchCertificates(page = 1) {
-      if (page < 1 || page > this.pagination.pages) return;
+      // Guard against invalid page numbers, but allow page 1 even if pages is 0
+      if (page < 1 || (this.pagination.pages > 0 && page > this.pagination.pages)) return;
 
       try {
         this.loadingList = true;
@@ -429,6 +540,7 @@ export default {
         this.pagination = response?.pagination || this.pagination;
       } catch (error) {
         this.errorMessage = getErrorMessage(error);
+        this.records = [];
       } finally {
         this.loadingList = false;
       }
@@ -474,14 +586,27 @@ export default {
   },
   async mounted() {
     try {
+      document.addEventListener('click', this.handleClickOutside);
+      
+      // Load dropdown data first
       this.loading = true;
-      await this.loadDropdownData();
+      try {
+        await this.loadDropdownData();
+      } catch (error) {
+        console.error('Dropdown data load failed, but continuing to load certificate list:', error);
+        // Continue even if dropdown data fails - the list should still load
+      }
+      
+      // Load certificates regardless of dropdown status
       await this.fetchCertificates(1);
     } catch (error) {
       this.errorMessage = getErrorMessage(error);
     } finally {
       this.loading = false;
     }
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.handleClickOutside);
   }
 };
 </script>
@@ -494,5 +619,90 @@ export default {
 
 .text-wrap {
   max-width: 260px;
+}
+
+.multi-select {
+  position: relative;
+}
+
+.multi-select-trigger {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  padding: 0.65rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  text-align: left;
+  color: #2c3e50;
+}
+
+.multi-select-trigger.open,
+.multi-select-trigger:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.15);
+  outline: none;
+}
+
+.multi-select-trigger:disabled {
+  background: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.multi-select-trigger.is-invalid {
+  border-color: #e74c3c;
+}
+
+.multi-select-caret {
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.multi-select-menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #d9e2ec;
+  border-radius: 10px;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+  padding: 0.85rem;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.multi-select-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.65rem;
+  margin-bottom: 0.65rem;
+  border-bottom: 1px solid #e7eef5;
+}
+
+.multi-select-option {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.45rem 0;
+  cursor: pointer;
+  color: #2c3e50;
+}
+
+.multi-select-option input {
+  margin: 0;
+}
+
+.form-label {
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
 }
 </style>
