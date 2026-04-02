@@ -31,11 +31,29 @@
       <div class="card-body">
         <div class="row g-3">
           <div class="col-md-4">
-            <CustomInput
+            <CustomSelect
+              v-model="filters.classId"
+              label="Class"
+              :options="classOptions"
+              placeholder="All classes"
+            />
+          </div>
+          <div class="col-md-4">
+            <CustomSelect
+              v-model="filters.sectionId"
+              label="Section"
+              :options="sectionOptions"
+              :disabled="!filters.classId"
+              placeholder="All sections"
+            />
+          </div>
+          <div class="col-md-4">
+            <CustomSelect
               v-model="filters.studentId"
-              label="Student ID"
-              placeholder="Search by student"
-              @blur="applyFilters"
+              label="Student"
+              :options="studentOptions"
+              :disabled="!filters.classId"
+              placeholder="Select class first"
             />
           </div>
           <div class="col-md-4">
@@ -44,7 +62,6 @@
               label="Status"
               :options="statusOptions"
               placeholder="Filter by status"
-              @update:model-value="applyFilters"
             />
           </div>
           <div class="col-md-4">
@@ -126,17 +143,20 @@
 
 <script>
 import { mapState, mapGetters, mapActions } from 'vuex';
-import CustomInput from '../../../components/CustomInput.vue';
+import { classes, sections, students } from '../../../api/api.js';
 import CustomSelect from '../../../components/CustomSelect.vue';
 import AlertComponent from '../../../components/AlertComponent.vue';
 import { getErrorMessage } from '../../../utils/validation.js';
 
 export default {
   name: 'FeeList',
-  components: { CustomInput, CustomSelect, AlertComponent },
+  components: { CustomSelect, AlertComponent },
   data() {
     return {
-      filters: { studentId: '', status: '' },
+      filters: { classId: '', sectionId: '', studentId: '', status: '' },
+      classOptions: [],
+      allSections: [],
+      allStudents: [],
       statusOptions: [
         { value: 'pending', label: 'Pending' },
         { value: 'paid', label: 'Paid' }
@@ -153,6 +173,23 @@ export default {
     currentPage() {
       return this.pagination?.page || 1;
     },
+    sectionOptions() {
+      return this.allSections
+        .filter((section) => !this.filters.classId || section.classId === this.filters.classId)
+        .map((section) => ({
+          value: section._id,
+          label: section.className ? `${section.name} (${section.className})` : section.name
+        }));
+    },
+    studentOptions() {
+      return this.allStudents
+        .filter((student) => !this.filters.classId || student.classId === this.filters.classId)
+        .filter((student) => !this.filters.sectionId || student.sectionId === this.filters.sectionId)
+        .map((student) => ({
+          value: student._id,
+          label: student.registrationNumber ? `${student.fullName} (${student.registrationNumber})` : student.fullName
+        }));
+    },
     totalPages() {
       const pages = this.pagination?.pages;
       if (pages) return pages;
@@ -161,11 +198,46 @@ export default {
       return Math.max(1, Math.ceil(total / limit));
     }
   },
+  watch: {
+    'filters.classId'() {
+      this.filters.sectionId = '';
+      this.filters.studentId = '';
+    },
+    'filters.sectionId'() {
+      this.filters.studentId = '';
+    }
+  },
   methods: {
     ...mapActions('fees', {
       fetchFees: 'fetch',
       removeFee: 'delete'
     }),
+    async loadFilterOptions() {
+      const [classesResponse, sectionsResponse, studentsResponse] = await Promise.all([
+        classes.getAll(1, 200),
+        sections.getAll(1, 200),
+        students.getAll(1, 500)
+      ]);
+
+      const classData = classesResponse?.data || [];
+      this.classOptions = classData.map((item) => ({
+        value: item._id,
+        label: item.classCode ? `${item.name} (${item.classCode})` : item.name
+      }));
+
+      const classMap = Object.fromEntries(classData.map((item) => [item._id, item.name]));
+      this.allSections = (sectionsResponse?.data || []).map((item) => ({
+        ...item,
+        classId: item.classId?._id || item.classId,
+        className: classMap[item.classId?._id || item.classId] || ''
+      }));
+
+      this.allStudents = (studentsResponse?.data || []).map((item) => ({
+        ...item,
+        classId: item.class?._id || item.latestSession?.classId?._id || item.latestSession?.classId || '',
+        sectionId: item.section?._id || item.latestSession?.sectionId?._id || item.latestSession?.sectionId || ''
+      }));
+    },
     async applyFilters() {
       try {
         this.page = 1;
@@ -175,7 +247,7 @@ export default {
       }
     },
     clearFilters() {
-      this.filters = { studentId: '', status: '' };
+      this.filters = { classId: '', sectionId: '', studentId: '', status: '' };
       this.applyFilters();
     },
     async refreshList() {
@@ -200,7 +272,8 @@ export default {
       }
     }
   },
-  mounted() {
+  async mounted() {
+    await this.loadFilterOptions();
     this.applyFilters();
   }
 };

@@ -44,6 +44,7 @@
                 v-model="generateForm.sectionId"
                 label="Section"
                 :options="sectionOptions"
+                :disabled="!generateForm.classId"
                 placeholder="All sections"
                 :error="generateErrors.sectionId"
               />
@@ -113,6 +114,7 @@
               v-model="filters.sectionId"
               label="Section"
               :options="filterSectionOptions"
+              :disabled="!filters.classId"
               placeholder="All sections"
             />
           </div>
@@ -121,6 +123,7 @@
               v-model="filters.studentId"
               label="Student"
               :options="filterStudentOptions"
+              :disabled="!filters.classId"
               placeholder="All students"
             />
           </div>

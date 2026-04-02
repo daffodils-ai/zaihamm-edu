@@ -32,14 +32,6 @@
         <div class="row g-3">
           <div class="col-lg-3 col-md-6">
             <CustomSelect
-              v-model="filters.studentId"
-              label="Student"
-              :options="studentOptions"
-              placeholder="All students"
-            />
-          </div>
-          <div class="col-lg-3 col-md-6">
-            <CustomSelect
               v-model="filters.classId"
               label="Class"
               :options="classOptions"
@@ -51,7 +43,17 @@
               v-model="filters.sectionId"
               label="Section"
               :options="sectionOptions"
+              :disabled="!filters.classId"
               placeholder="All sections"
+            />
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <CustomSelect
+              v-model="filters.studentId"
+              label="Student"
+              :options="studentOptions"
+              :disabled="!filters.classId"
+              placeholder="Select class first"
             />
           </div>
           <div class="col-lg-3 col-md-6">
@@ -237,12 +239,12 @@ export default {
   data() {
     return {
       filters: {
-        studentId: '',
         classId: '',
         sectionId: '',
+        studentId: '',
         examDate: ''
       },
-      studentOptions: [],
+      studentOptionsSource: [],
       classOptions: [],
       allSections: [],
       page: 1,
@@ -273,6 +275,15 @@ export default {
         value: section._id,
         label: section.className ? `${section.name} (${section.className})` : section.name
       }));
+    },
+    studentOptions() {
+      return this.studentOptionsSource
+        .filter((student) => !this.filters.classId || student.classId === this.filters.classId)
+        .filter((student) => !this.filters.sectionId || student.sectionId === this.filters.sectionId)
+        .map((student) => ({
+          value: student._id,
+          label: student.registrationNumber ? `${student.fullName} (${student.registrationNumber})` : student.fullName
+        }));
     }
   },
   watch: {
@@ -286,6 +297,10 @@ export default {
       if (!valid) {
         this.filters.sectionId = '';
       }
+      this.filters.studentId = '';
+    },
+    'filters.sectionId'() {
+      this.filters.studentId = '';
     }
   },
   methods: {
@@ -309,9 +324,10 @@ export default {
         sections.getAll(1, 200)
       ]);
 
-      this.studentOptions = (studentsResponse?.data || []).map((student) => ({
-        value: student._id,
-        label: student.registrationNumber ? `${student.fullName} (${student.registrationNumber})` : student.fullName
+      this.studentOptionsSource = (studentsResponse?.data || []).map((student) => ({
+        ...student,
+        classId: student.class?._id || student.latestSession?.classId?._id || student.latestSession?.classId || '',
+        sectionId: student.section?._id || student.latestSession?.sectionId?._id || student.latestSession?.sectionId || ''
       }));
 
       this.classOptions = (classesResponse?.data || []).map((cls) => ({
@@ -335,7 +351,7 @@ export default {
       }
     },
     clearFilters() {
-      this.filters = { studentId: '', classId: '', sectionId: '', examDate: '' };
+      this.filters = { classId: '', sectionId: '', studentId: '', examDate: '' };
       this.applyFilters();
     },
     async goToPage(page) {

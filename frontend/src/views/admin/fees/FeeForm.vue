@@ -28,16 +28,6 @@
           <div class="row g-4">
             <div class="col-md-6">
               <CustomSelect
-                v-model="form.studentId"
-                label="Student"
-                :options="studentOptions"
-                placeholder="Select student"
-                required
-                :error="errors.studentId"
-              />
-            </div>
-            <div class="col-md-6">
-              <CustomSelect
                 v-model="form.classId"
                 label="Class"
                 :options="classOptions"
@@ -51,8 +41,20 @@
                 v-model="form.sectionId"
                 label="Section"
                 :options="sectionOptions"
+                :disabled="!form.classId"
                 placeholder="Select section (optional)"
                 :error="errors.sectionId"
+              />
+            </div>
+            <div class="col-md-6">
+              <CustomSelect
+                v-model="form.studentId"
+                label="Student"
+                :options="studentOptions"
+                :disabled="!form.classId"
+                placeholder="Select class first"
+                required
+                :error="errors.studentId"
               />
             </div>
             <div class="col-md-6">
@@ -141,7 +143,7 @@ export default {
       successMessage: '',
       errorMessage: '',
       isLoading: false,
-      studentOptions: [],
+      allStudents: [],
       classOptions: [],
       allSections: [],
       statusOptions: [
@@ -168,23 +170,23 @@ export default {
         value: section._id,
         label: section.className ? `${section.name} (${section.className})` : section.name
       }));
+    },
+    studentOptions() {
+      return this.allStudents
+        .filter((student) => !this.form.classId || student.classId === this.form.classId)
+        .filter((student) => !this.form.sectionId || student.sectionId === this.form.sectionId)
+        .map((student) => ({
+          value: student._id,
+          label: student.registrationNumber ? `${student.fullName} (${student.registrationNumber})` : student.fullName
+        }));
     }
   },
   watch: {
-    async 'form.studentId'(newValue) {
-      if (!newValue || this.isEditMode) return;
-      try {
-        const response = await students.getLatestSession(newValue);
-        this.form.studentSessionId = response?.data?._id || '';
-        this.form.classId = response?.data?.classId?._id || response?.data?.classId || this.form.classId;
-        this.form.sectionId = response?.data?.sectionId?._id || response?.data?.sectionId || '';
-      } catch (error) {
-        this.errorMessage = getErrorMessage(error);
-      }
-    },
     'form.classId'(newValue) {
       if (!newValue) {
         this.form.sectionId = '';
+        this.form.studentId = '';
+        this.form.studentSessionId = '';
         return;
       }
 
@@ -195,6 +197,24 @@ export default {
       if (!validSection) {
         this.form.sectionId = '';
       }
+      this.form.studentId = '';
+      this.form.studentSessionId = '';
+    },
+    async 'form.studentId'(newValue) {
+      if (!newValue) {
+        this.form.studentSessionId = '';
+        return;
+      }
+      try {
+        const response = await students.getLatestSession(newValue);
+        this.form.studentSessionId = response?.data?._id || '';
+      } catch (error) {
+        this.errorMessage = getErrorMessage(error);
+      }
+    },
+    'form.sectionId'() {
+      this.form.studentId = '';
+      this.form.studentSessionId = '';
     }
   },
   methods: {
@@ -210,9 +230,10 @@ export default {
         sections.getAll(1, 200)
       ]);
 
-      this.studentOptions = (studentsResponse?.data || []).map((student) => ({
-        value: student._id,
-        label: student.registrationNumber ? `${student.fullName} (${student.registrationNumber})` : student.fullName
+      this.allStudents = (studentsResponse?.data || []).map((student) => ({
+        ...student,
+        classId: student.class?._id || student.latestSession?.classId?._id || student.latestSession?.classId || '',
+        sectionId: student.section?._id || student.latestSession?.sectionId?._id || student.latestSession?.sectionId || ''
       }));
 
       const classData = classesResponse?.data || [];

@@ -28,16 +28,6 @@
       <div class="card-body">
         <form @submit.prevent="handleSubmit">
           <div class="row g-4">
-            <div class="col-md-6">
-              <CustomSelect
-                v-model="form.studentId"
-                label="Student"
-                :options="studentOptions"
-                placeholder="Select student"
-                required
-                :error="errors.studentId"
-              />
-            </div>
             <div class="col-md-3">
               <CustomSelect
                 v-model="form.classId"
@@ -54,7 +44,19 @@
                 label="Section"
                 :options="sectionOptions"
                 placeholder="Optional section"
+                :disabled="!form.classId"
                 :error="errors.sectionId"
+              />
+            </div>
+            <div class="col-md-6">
+              <CustomSelect
+                v-model="form.studentId"
+                label="Student"
+                :options="studentOptions"
+                :disabled="!form.classId"
+                placeholder="Select class first"
+                required
+                :error="errors.studentId"
               />
             </div>
             <div class="col-md-3">
