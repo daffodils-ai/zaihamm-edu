@@ -1,8 +1,8 @@
 import { mkdtemp, rm, writeFile, readFile } from 'fs/promises';
+import { createWriteStream } from 'fs';
 import { tmpdir } from 'os';
 import path from 'path';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
+import archiver from 'archiver';
 import CertificateRepository from '../repository/CertificateRepository.js';
 import StudentSessionRepository from '../repository/StudentSessionRepository.js';
 import StudentRepository from '../repository/StudentRepository.js';
@@ -12,8 +12,6 @@ import Section from '../model/Section.js';
 import { CERTIFICATE_NAMES } from '../model/Certificate.js';
 import { ApiError } from '../utils/error.js';
 import { HTTP_CODES } from '../constants/index.js';
-
-const execFileAsync = promisify(execFile);
 
 const sanitizeFileName = (value) => `${value || 'certificate'}`
     .replace(/[^a-z0-9-_ ]/gi, '')
@@ -149,7 +147,8 @@ class CertificateService {
         const zipPath = path.join(tempDir, 'certificates.zip');
 
         try {
-            const pdfNames = await Promise.all(records.map(async (record) => {
+            // Generate PDFs and write to temp directory
+            await Promise.all(records.map(async (record) => {
                 const pdf = await CertificatePdfService.generate(record);
                 const parts = [
                     sanitizeFileName(record.studentId?.fullName),
@@ -160,16 +159,31 @@ class CertificateService {
                 }
                 const fileName = `${parts.join('_')}.pdf`;
                 await writeFile(path.join(tempDir, fileName), pdf);
-                return fileName;
             }));
 
-            await execFileAsync('zip', ['-j', zipPath, ...pdfNames], { cwd: tempDir });
-            return readFile(zipPath);
+            // Create ZIP archive using archiver
+            await this.createZipFile(tempDir, zipPath);
+            return await readFile(zipPath);
         } catch (error) {
             throw new ApiError(HTTP_CODES.INTERNAL_ERROR, error.message || 'Failed to generate zip file');
         } finally {
             await rm(tempDir, { recursive: true, force: true });
         }
+    }
+
+    async createZipFile(sourceDir, outputPath) {
+        return new Promise((resolve, reject) => {
+            const output = createWriteStream(outputPath);
+            const archive = archiver('zip', {
+                zlib: { level: 9 }
+            });
+
+            output.on('close', resolve);
+            archive.on('error', reject);
+            archive.pipe(output);
+            archive.directory(sourceDir, false);
+            archive.finalize();
+        });
     }
 }
 
