@@ -154,7 +154,7 @@ export const auth = {
     return post('/organization-users/login', {
       email,
       password,
-      organizationId,
+      ...(organizationId && { organizationId })
     });
   },
 

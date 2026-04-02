@@ -36,13 +36,18 @@ class OrganizationUserService {
     }
 
     /**
-     * Login organization user
+     * Login organization user - email and password only
      */
-    async login(email, password, organizationId) {
+    async login(email, password, organizationId = null) {
         try {
             const user = await OrganizationUserRepository.findByEmailWithPassword(email);
 
-            if (!user || user.organizationId.toString() !== organizationId.toString()) {
+            if (!user) {
+                throw new ApiError(HTTP_CODES.UNAUTHORIZED, ERROR_MESSAGES.INVALID_CREDENTIALS);
+            }
+
+            // If organizationId is provided, verify it matches (for backward compatibility)
+            if (organizationId && user.organizationId.toString() !== organizationId.toString()) {
                 throw new ApiError(HTTP_CODES.UNAUTHORIZED, ERROR_MESSAGES.INVALID_CREDENTIALS);
             }
 

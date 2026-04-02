@@ -33,12 +33,32 @@ export const generatePassword = () => {
 };
 
 /**
- * Generate 16-digit registration number
+ * Generate sequential registration number based on organization
+ * Format: Organization abbreviation + sequential number (min 5 digits)
+ * Example: DRC001, DRC002, ..., DRCn
  */
-export const generateRegistrationNumber = () => {
-    return Array.from({ length: REGISTRATION_NUMBER_LENGTH }, () => 
-        Math.floor(Math.random() * 10)
-    ).join('');
+export const generateRegistrationNumber = async (organizationId, organizationName, studentCount) => {
+    if (!organizationId || !organizationName || studentCount === undefined) {
+        // Fallback to old method if parameters missing
+        return Array.from({ length: REGISTRATION_NUMBER_LENGTH }, () => 
+            Math.floor(Math.random() * 10)
+        ).join('');
+    }
+    
+    // Generate abbreviation from organization name
+    const abbreviation = organizationName
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase())
+        .join('')
+        .substring(0, 3);
+    
+    // Next sequential number
+    const nextNumber = studentCount + 1;
+    
+    // Pad with zeros to ensure minimum 5 digits for the full registration number
+    const sequentialNumber = String(nextNumber).padStart(3, '0');
+    
+    return `${abbreviation}${sequentialNumber}`;
 };
 
 /**

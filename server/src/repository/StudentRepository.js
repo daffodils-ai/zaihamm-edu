@@ -54,6 +54,10 @@ class StudentRepository {
         return Student.findByIdAndDelete(id);
     }
 
+    async countByOrganization(organizationId) {
+        return Student.countDocuments({ organizationId });
+    }
+
     async findByOrganization(organizationId, page = 1, limit = 10) {
         const pagination = buildPaginationOptions(page, limit);
         const [data, total] = await Promise.all([

@@ -19,15 +19,6 @@
 
           <form @submit.prevent="handleLogin">
             <CustomInput
-              v-model="form.organizationId"
-              label="Organization ID"
-              type="text"
-              placeholder="Enter your organization ID"
-              required
-              :error="errors.organizationId"
-            />
-
-            <CustomInput
               v-model="form.email"
               label="Email Address"
               type="email"
@@ -99,8 +90,7 @@ export default {
     return {
       form: {
         email: '',
-        password: '',
-        organizationId: ''
+        password: ''
       },
       rememberMe: false,
       errors: {},
@@ -116,10 +106,6 @@ export default {
 
     validateForm() {
       this.errors = {};
-
-      if (!this.form.organizationId.trim()) {
-        this.errors.organizationId = 'Organization ID is required';
-      }
 
       if (!this.form.email.trim()) {
         this.errors.email = 'Email is required';
@@ -147,8 +133,7 @@ export default {
 
         await this.orgUserLogin({
           email: this.form.email,
-          password: this.form.password,
-          organizationId: this.form.organizationId
+          password: this.form.password
         });
 
         // Redirect to admin dashboard

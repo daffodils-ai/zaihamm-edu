@@ -40,10 +40,11 @@ class OrganizationUserController {
         try {
             const { email, password, organizationId } = req.body;
 
-            if (!email || !password || !organizationId) {
+            if (!email || !password) {
                 throw new ApiError(HTTP_CODES.BAD_REQUEST, ERROR_MESSAGES.INVALID_REQUEST);
             }
 
+            // organizationId is optional for backward compatibility
             const result = await OrganizationUserService.login(email, password, organizationId);
 
             res.status(HTTP_CODES.OK).json({

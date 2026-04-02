@@ -1,6 +1,7 @@
 import StudentRepository from '../repository/StudentRepository.js';
 import StudentSessionRepository from '../repository/StudentSessionRepository.js';
 import NotificationRepository from '../repository/NotificationRepository.js';
+import Organization from '../model/Organization.js';
 import { hashPassword, generatePassword, generateRegistrationNumber, generateToken } from '../utils/index.js';
 import { ApiError } from '../utils/error.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES, HTTP_CODES, STUDENT_STATUS } from '../constants/index.js';
@@ -60,8 +61,21 @@ class StudentService {
                 throw new ApiError(HTTP_CODES.CONFLICT, 'Student with this Aadhar already exists');
             }
 
-            // Generate registration number
-            const registrationNumber = generateRegistrationNumber();
+            // Get organization details for registration number generation
+            const organization = await Organization.findById(data.organizationId);
+            if (!organization) {
+                throw new ApiError(HTTP_CODES.NOT_FOUND, 'Organization not found');
+            }
+
+            // Get count of existing students for this organization
+            const studentCount = await StudentRepository.countByOrganization(data.organizationId);
+
+            // Generate sequential registration number
+            const registrationNumber = await generateRegistrationNumber(
+                data.organizationId,
+                organization.name,
+                studentCount
+            );
             data.registrationNumber = registrationNumber;
 
             // Create student
@@ -238,16 +252,34 @@ class StudentService {
     }
 
     /**
-     * Delete student
+     * Delete student - only if not admitted (no sessions)
      */
     async deleteStudent(id) {
         try {
-            const student = await StudentRepository.delete(id);
+            const student = await StudentRepository.findById(id);
             if (!student) {
                 throw new ApiError(HTTP_CODES.NOT_FOUND, ERROR_MESSAGES.STUDENT_NOT_FOUND);
             }
+
+            // Check if student has any sessions (i.e., has been admitted)
+            const sessions = await StudentSessionRepository.findHistoryByStudent(
+                id,
+                student.organizationId,
+                1,
+                1
+            );
+
+            if (sessions.data && sessions.data.length > 0) {
+                throw new ApiError(
+                    HTTP_CODES.FORBIDDEN,
+                    'Cannot delete student after admission. Student has active or past sessions.'
+                );
+            }
+
+            // Only allow deletion if student has no sessions
+            const deletedStudent = await StudentRepository.delete(id);
             Logger.log(`Student deleted: ${id}`, Logger.Level.INFO);
-            return student;
+            return deletedStudent;
         } catch (error) {
             Logger.log(`Error deleting student: ${error.message}`, Logger.Level.ERROR);
             throw error;

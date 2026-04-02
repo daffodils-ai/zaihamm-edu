@@ -2,6 +2,21 @@
 import { auth } from '../../../api/api.js';
 import { storage } from '../../../service/StorageService.js';
 
+// Helper function to decode JWT token
+const decodeToken = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    return null;
+  }
+};
+
 export const actions = {
   async orgUserLogin({ commit }, { email, password, organizationId }) {
     try {
@@ -12,18 +27,25 @@ export const actions = {
 
       if (response.success && response.data) {
         const { token, user } = response.data;
+        
+        // Decode token to get organizationId if not provided
+        let orgId = organizationId;
+        if (!orgId) {
+          const decoded = decodeToken(token);
+          orgId = decoded?.organizationId;
+        }
 
         commit('SET_TOKEN', token);
         commit('SET_USER', user);
         commit('SET_USER_TYPE', 'organization_user');
-        commit('SET_ORGANIZATION_ID', organizationId);
+        commit('SET_ORGANIZATION_ID', orgId);
         commit('SET_AUTHENTICATED', true);
 
         // Persist to storage
         storage.setToken(token);
         storage.setUser(user);
         storage.setItem('userType', 'organization_user');
-        storage.setItem('organizationId', organizationId);
+        storage.setItem('organizationId', orgId);
 
         return response;
       }

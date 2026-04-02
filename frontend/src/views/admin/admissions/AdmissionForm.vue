@@ -356,6 +356,11 @@ export default {
       if (!validSection) {
         this.form.sectionId = '';
       }
+    },
+    'form.dateOfBirth'(newValue) {
+      if (newValue) {
+        this.form.age = this.calculateAgeFromDob(newValue);
+      }
     }
   },
   methods: {
