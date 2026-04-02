@@ -145,24 +145,31 @@ class CertificateService {
 
         const tempDir = await mkdtemp(path.join(tmpdir(), 'edu-certificates-'));
         const zipPath = path.join(tempDir, 'certificates.zip');
+        const filesGenerated = [];
 
         try {
             // Generate PDFs and write to temp directory
             await Promise.all(records.map(async (record) => {
                 const pdf = await CertificatePdfService.generate(record);
+                
+                // Include certificate type in filename to avoid overwrites
                 const parts = [
                     sanitizeFileName(record.studentId?.fullName),
+                    sanitizeFileName(record.certificateName),
                     sanitizeFileName(record.classId?.name)
                 ];
                 if (record.sectionId?.name) {
                     parts.push(sanitizeFileName(record.sectionId.name));
                 }
+                
                 const fileName = `${parts.join('_')}.pdf`;
-                await writeFile(path.join(tempDir, fileName), pdf);
+                const filePath = path.join(tempDir, fileName);
+                await writeFile(filePath, pdf);
+                filesGenerated.push(filePath);
             }));
 
-            // Create ZIP archive using archiver
-            await this.createZipFile(tempDir, zipPath);
+            // Create ZIP archive with individual files
+            await this.createZipFile(filesGenerated, zipPath);
             return await readFile(zipPath);
         } catch (error) {
             throw new ApiError(HTTP_CODES.INTERNAL_ERROR, error.message || 'Failed to generate zip file');
@@ -171,7 +178,7 @@ class CertificateService {
         }
     }
 
-    async createZipFile(sourceDir, outputPath) {
+    async createZipFile(files, outputPath) {
         return new Promise((resolve, reject) => {
             const output = createWriteStream(outputPath);
             const archive = archiver('zip', {
@@ -181,7 +188,13 @@ class CertificateService {
             output.on('close', resolve);
             archive.on('error', reject);
             archive.pipe(output);
-            archive.directory(sourceDir, false);
+            
+            // Add individual files to avoid nested directories
+            files.forEach((filePath) => {
+                const fileName = path.basename(filePath);
+                archive.file(filePath, { name: fileName });
+            });
+            
             archive.finalize();
         });
     }
