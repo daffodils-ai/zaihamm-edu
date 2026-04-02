@@ -1,6 +1,7 @@
 import StudentService from '../service/StudentService.js';
 import AdmissionTrackerService from '../service/AdmissionTrackerService.js';
 import FeeService from '../service/FeeService.js';
+import StudentDocumentService from '../service/StudentDocumentService.js';
 import { ApiError } from '../utils/error.js';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES, HTTP_CODES, ALLOWED_ROLES_TO_ADMIT_STUDENT, FEE_STATUS, FEE_TYPES } from '../constants/index.js';
 import { Logger } from '../logger/logger.js';
@@ -308,6 +309,24 @@ class StudentController {
                 message: SUCCESS_MESSAGES.FETCHED,
                 data: session
             });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async downloadIdCard(req, res, next) {
+        try {
+            const { studentId } = req.params;
+            const student = await StudentService.getStudentById(studentId);
+            const latestSession = await StudentService.getLatestSession(studentId);
+            const pdfBuffer = await StudentDocumentService.generateIdCard(student, latestSession);
+            const safeName = `${student.fullName || 'student'}_id_card`
+                .replace(/[^a-z0-9-_]+/gi, '-')
+                .toLowerCase();
+
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename="${safeName}.pdf"`);
+            res.status(HTTP_CODES.OK).send(pdfBuffer);
         } catch (error) {
             next(error);
         }

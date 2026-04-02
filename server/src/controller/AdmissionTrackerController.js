@@ -23,12 +23,14 @@ class AdmissionTrackerController {
                 parentEmail,
                 fatherName,
                 motherName,
+                motherAadharNo,
                 guardianName,
                 aadharNo,
                 parentAadharNumber,
                 parentAadharRelation,
                 fullAddress,
-                previousSchool
+                previousSchool,
+                previousClass
             } = req.body;
 
             const normalizedFullName = `${fullName || ''}`.trim();
@@ -95,12 +97,14 @@ class AdmissionTrackerController {
                 parentEmail,
                 fatherName: normalizedFatherName,
                 motherName: normalizedMotherName,
+                motherAadharNo: `${motherAadharNo || ''}`.trim(),
                 guardianName,
                 aadharNo: normalizedAadharNo,
                 parentAadharNumber: normalizedParentAadharNumber,
                 parentAadharRelation: normalizedRelation,
                 fullAddress: normalizedAddress,
-                previousSchool
+                previousSchool,
+                previousClass
             });
 
             res.status(HTTP_CODES.CREATED).json({

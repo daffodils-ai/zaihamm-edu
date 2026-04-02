@@ -66,6 +66,11 @@ const studentSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    motherAadharNo: {
+        type: String,
+        trim: true,
+        default: ''
+    },
     guardianName: {
         type: String,
         trim: true
@@ -91,6 +96,11 @@ const studentSchema = new mongoose.Schema({
     previousSchool: {
         type: String,
         trim: true
+    },
+    previousClass: {
+        type: String,
+        trim: true,
+        default: ''
     },
     createdAt: {
         type: Date,

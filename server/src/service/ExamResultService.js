@@ -1,6 +1,7 @@
 import Class from '../model/Class.js';
 import Section from '../model/Section.js';
 import Student from '../model/Student.js';
+import Subject from '../model/Subject.js';
 import ExamResultRepository from '../repository/ExamResultRepository.js';
 import ExamResultPdfService from './ExamResultPdfService.js';
 import { ApiError } from '../utils/error.js';
@@ -9,6 +10,7 @@ import { Logger } from '../logger/logger.js';
 
 const normalizeText = (value) => value.trim().toLowerCase();
 const buildSectionKey = (sectionId) => sectionId || 'no-section';
+const resolveId = (value) => value?._id?.toString?.() || value?.toString?.() || '';
 
 const roundTwo = (value) => Math.round(value * 100) / 100;
 
@@ -30,17 +32,31 @@ class ExamResultService {
 
         const seen = new Set();
         return subjects.map((subject) => {
+            const subjectId = resolveId(subject.subjectId).trim();
             const subjectName = `${subject.subject || ''}`.trim();
             const grade = `${subject.grade || ''}`.trim();
-            const obtainedMarks = Number(subject.obtainedMarks);
+            const internalMarks = Number(subject.internalMarks);
+            const externalMarks = Number(subject.externalMarks);
+            const obtainedMarks = internalMarks + externalMarks;
             const passMarks = Number(subject.passMarks);
             const totalMarks = Number(subject.totalMarks);
 
-            if (!subjectName || !grade || Number.isNaN(obtainedMarks) || Number.isNaN(passMarks) || Number.isNaN(totalMarks)) {
-                throw new ApiError(HTTP_CODES.BAD_REQUEST, 'Each subject must include subject, obtained marks, pass marks, total marks and grade');
+            if (
+                !subjectId
+                || !subjectName
+                || !grade
+                || Number.isNaN(internalMarks)
+                || Number.isNaN(externalMarks)
+                || Number.isNaN(passMarks)
+                || Number.isNaN(totalMarks)
+            ) {
+                throw new ApiError(
+                    HTTP_CODES.BAD_REQUEST,
+                    'Each subject must include subjectId, subject, internal marks, external marks, pass marks, total marks and grade'
+                );
             }
 
-            if (obtainedMarks < 0 || passMarks < 0 || totalMarks <= 0) {
+            if (internalMarks < 0 || externalMarks < 0 || passMarks < 0 || totalMarks <= 0) {
                 throw new ApiError(HTTP_CODES.BAD_REQUEST, 'Marks must be valid positive numbers');
             }
 
@@ -48,14 +64,17 @@ class ExamResultService {
                 throw new ApiError(HTTP_CODES.BAD_REQUEST, 'Obtained marks and pass marks cannot exceed total marks');
             }
 
-            const normalized = normalizeText(subjectName);
+            const normalized = normalizeText(subjectId);
             if (seen.has(normalized)) {
                 throw new ApiError(HTTP_CODES.CONFLICT, `Duplicate subject "${subjectName}" is not allowed in the same exam result`);
             }
             seen.add(normalized);
 
             return {
+                subjectId,
                 subject: subjectName,
+                internalMarks,
+                externalMarks,
                 obtainedMarks,
                 passMarks,
                 totalMarks,
@@ -80,6 +99,40 @@ class ExamResultService {
             overallGrade,
             resultStatus
         };
+    }
+
+    async validateSubjectMappings(organizationId, classId, subjects = []) {
+        const subjectIds = [...new Set(subjects.map((item) => item.subjectId))];
+        const availableSubjects = await Subject.find({
+            _id: { $in: subjectIds },
+            organizationId,
+            isActive: true
+        }).select('_id name classIds organizationId');
+
+        if (availableSubjects.length !== subjectIds.length) {
+            throw new ApiError(HTTP_CODES.BAD_REQUEST, 'One or more selected subjects are invalid');
+        }
+
+        const subjectMap = new Map(availableSubjects.map((item) => [item._id.toString(), item]));
+
+        return subjects.map((item) => {
+            const subject = subjectMap.get(item.subjectId);
+            if (!subject) {
+                throw new ApiError(HTTP_CODES.BAD_REQUEST, 'Selected subject is invalid');
+            }
+
+            const allowedForClass = !subject.classIds?.length
+                || subject.classIds.some((id) => id.toString() === classId);
+            if (!allowedForClass) {
+                throw new ApiError(HTTP_CODES.BAD_REQUEST, `Subject "${subject.name}" is not available for the selected class`);
+            }
+
+            return {
+                ...item,
+                subjectId: subject._id.toString(),
+                subject: subject.name
+            };
+        });
     }
 
     async validateRelations({ studentId, classId, sectionId }) {
@@ -117,8 +170,9 @@ class ExamResultService {
 
     async create(data) {
         try {
-            const subjects = this.validateSubjects(data.subjects);
+            const validatedSubjects = this.validateSubjects(data.subjects);
             await this.validateRelations(data);
+            const subjects = await this.validateSubjectMappings(data.organizationId, data.classId, validatedSubjects);
 
             const examName = `${data.examName || ''}`.trim();
             if (!examName || !data.examDate || !data.year) {
@@ -193,8 +247,9 @@ class ExamResultService {
                 subjects: data.subjects || existing.subjects
             };
 
-            const subjects = this.validateSubjects(merged.subjects);
+            const validatedSubjects = this.validateSubjects(merged.subjects);
             await this.validateRelations(merged);
+            const subjects = await this.validateSubjectMappings(merged.organizationId, merged.classId, validatedSubjects);
 
             const examNameNormalized = normalizeText(merged.examName);
             await this.ensureUniqueExam({

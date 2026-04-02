@@ -25,6 +25,10 @@ const FeeList = () => import('../views/admin/fees/FeeList.vue');
 const FeeForm = () => import('../views/admin/fees/FeeForm.vue');
 const ExamResultList = () => import('../views/admin/examResults/ExamResultList.vue');
 const ExamResultForm = () => import('../views/admin/examResults/ExamResultForm.vue');
+const SubjectList = () => import('../views/admin/subjects/SubjectList.vue');
+const SubjectForm = () => import('../views/admin/subjects/SubjectForm.vue');
+const SubjectDetail = () => import('../views/admin/subjects/SubjectDetail.vue');
+const CertificateList = () => import('../views/admin/certificates/CertificateList.vue');
 const OrganizationUserList = () => import('../views/admin/users/OrganizationUserList.vue');
 const OrganizationUserForm = () => import('../views/admin/users/OrganizationUserForm.vue');
 const StudentPortal = () => import('../views/student/StudentPortal.vue');
@@ -224,6 +228,36 @@ const routes = [
         name: 'ExamResultEdit',
         component: ExamResultForm,
         meta: { title: 'Edit Exam Result' }
+      },
+      {
+        path: 'subjects',
+        name: 'SubjectList',
+        component: SubjectList,
+        meta: { title: 'Subjects' }
+      },
+      {
+        path: 'subjects/new',
+        name: 'SubjectNew',
+        component: SubjectForm,
+        meta: { title: 'Add Subject' }
+      },
+      {
+        path: 'subjects/:id',
+        name: 'SubjectDetail',
+        component: SubjectDetail,
+        meta: { title: 'Subject Detail' }
+      },
+      {
+        path: 'subjects/:id/edit',
+        name: 'SubjectEdit',
+        component: SubjectForm,
+        meta: { title: 'Edit Subject' }
+      },
+      {
+        path: 'certificates',
+        name: 'CertificateList',
+        component: CertificateList,
+        meta: { title: 'Certificates' }
       },
 
       // Organization Users

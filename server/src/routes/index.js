@@ -12,6 +12,8 @@ import examResultRoutes from './examResultRoutes.js';
 import dashboardRoutes from './dashboardRoutes.js';
 import reportRoutes from './reportRoutes.js';
 import admissionTrackerRoutes from './admissionTrackerRoutes.js';
+import subjectRoutes from './subjectRoutes.js';
+import certificateRoutes from './certificateRoutes.js';
 
 const router = express.Router();
 
@@ -26,6 +28,8 @@ router.use('/api/v1/notices', noticeBoardRoutes);
 router.use('/api/v1/notifications', notificationRoutes);
 router.use('/api/v1/fees', feeRoutes);
 router.use('/api/v1/exam-results', examResultRoutes);
+router.use('/api/v1/subjects', subjectRoutes);
+router.use('/api/v1/certificates', certificateRoutes);
 router.use('/api/v1/dashboard', dashboardRoutes);
 router.use('/api/v1/reports', reportRoutes);
 router.use('/api/v1/admissions', admissionTrackerRoutes);

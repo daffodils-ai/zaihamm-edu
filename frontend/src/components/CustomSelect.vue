@@ -5,13 +5,15 @@
       <span v-if="required" class="text-danger">*</span>
     </label>
     <select
-      :value="modelValue"
+      :value="multiple ? undefined : modelValue"
       :class="['form-select', { 'is-invalid': error }]"
       :disabled="disabled"
+      :multiple="multiple"
+      :size="multiple ? size : undefined"
       :required="required"
-      @change="$emit('update:modelValue', $event.target.value)"
+      @change="handleChange"
     >
-      <option v-if="placeholder" value="">{{ placeholder }}</option>
+      <option v-if="placeholder && !multiple" value="">{{ placeholder }}</option>
       <option v-for="option in options" :key="option.value" :value="option.value">
         {{ option.label }}
       </option>
@@ -25,7 +27,7 @@ export default {
   name: 'CustomSelect',
   props: {
     modelValue: {
-      type: [String, Number],
+      type: [String, Number, Array],
       default: ''
     },
     label: {
@@ -49,12 +51,47 @@ export default {
       type: Boolean,
       default: false
     },
+    multiple: {
+      type: Boolean,
+      default: false
+    },
+    size: {
+      type: Number,
+      default: 5
+    },
     error: {
       type: String,
       default: ''
     }
   },
-  emits: ['update:modelValue']
+  emits: ['update:modelValue'],
+  mounted() {
+    this.syncMultipleValue();
+  },
+  updated() {
+    this.syncMultipleValue();
+  },
+  methods: {
+    handleChange(event) {
+      if (!this.multiple) {
+        this.$emit('update:modelValue', event.target.value);
+        return;
+      }
+
+      this.$emit('update:modelValue', Array.from(event.target.selectedOptions, (option) => option.value));
+    },
+    syncMultipleValue() {
+      if (!this.multiple || !this.$el) return;
+
+      const values = Array.isArray(this.modelValue) ? this.modelValue.map(String) : [];
+      const select = this.$el.querySelector('select');
+      if (!select) return;
+
+      Array.from(select.options).forEach((option) => {
+        option.selected = values.includes(String(option.value));
+      });
+    }
+  }
 };
 </script>
 

@@ -59,6 +59,10 @@ const requestBlob = async (url, options = {}) => {
     ...options.headers,
   };
 
+  if (options.body && !headers['Content-Type'] && !(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
@@ -133,6 +137,14 @@ export const download = (url, options = {}) => {
   });
 };
 
+export const downloadPost = (url, data = {}, options = {}) => {
+  return requestBlob(url, {
+    method: 'POST',
+    body: JSON.stringify(data),
+    ...options,
+  });
+};
+
 // =====================
 // Authentication APIs
 // =====================
@@ -195,6 +207,7 @@ export const students = {
     return get(`/students/${id}/history?${query}`);
   },
   getLatestSession: (id) => get(`/students/${id}/latest-session`),
+  downloadIdCard: (id) => download(`/students/${id}/id-card`),
 };
 
 // =====================
@@ -350,6 +363,32 @@ export const examResults = {
   delete: (id) => deleteRequest(`/exam-results/${id}`),
   finalize: (id) => put(`/exam-results/${id}/finalize`),
   downloadPdf: (id) => download(`/exam-results/${id}/pdf`),
+};
+
+export const subjects = {
+  create: (payload) => post('/subjects', payload),
+  getAll: (page = 1, limit = 10, filters = {}) => {
+    const query = new URLSearchParams({ page, limit, ...filters });
+    return get(`/subjects?${query}`);
+  },
+  getById: (id) => get(`/subjects/${id}`),
+  getAvailable: (classId = '') => {
+    const query = new URLSearchParams();
+    if (classId) query.set('classId', classId);
+    return get(`/subjects/available${query.toString() ? `?${query}` : ''}`);
+  },
+  update: (id, payload) => put(`/subjects/${id}`, payload),
+  delete: (id) => deleteRequest(`/subjects/${id}`),
+};
+
+export const certificates = {
+  create: (payload) => post('/certificates', payload),
+  getAll: (page = 1, limit = 10, filters = {}) => {
+    const query = new URLSearchParams({ page, limit, ...filters });
+    return get(`/certificates?${query}`);
+  },
+  getOptions: () => get('/certificates/options'),
+  bulkDownload: (ids) => downloadPost('/certificates/bulk-download', { ids }),
 };
 
 // =====================

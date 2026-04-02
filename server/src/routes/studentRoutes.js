@@ -60,4 +60,9 @@ router.get('/:studentId/latest-session',
     StudentController.getLatestSession.bind(StudentController)
 );
 
+router.get('/:studentId/id-card',
+    authMiddleware,
+    StudentController.downloadIdCard.bind(StudentController)
+);
+
 export default router;

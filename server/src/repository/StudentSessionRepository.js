@@ -66,6 +66,22 @@ class StudentSessionRepository {
     async findByClass(classId, year, organizationId) {
         return StudentSession.find({ classId, year, organizationId });
     }
+
+    async findByClassAndSection(classId, sectionId = null, organizationId = null) {
+        const query = { classId };
+        if (sectionId) {
+            query.sectionId = sectionId;
+        }
+        if (organizationId) {
+            query.organizationId = organizationId;
+        }
+
+        return StudentSession.find(query)
+            .populate('studentId', 'fullName registrationNumber organizationId fatherName motherName fullAddress dateOfBirth studentPic')
+            .populate('classId', 'name classCode')
+            .populate('sectionId', 'name')
+            .sort({ year: -1, createdAt: -1 });
+    }
 }
 
 export default new StudentSessionRepository();

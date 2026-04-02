@@ -76,6 +76,22 @@
             <i class="icon">🧾</i>
             <span>Exam Results</span>
           </router-link>
+          <router-link
+            to="/admin/subjects"
+            class="nav-link"
+            :class="{ active: $route.path.includes('/subjects') }"
+          >
+            <i class="icon">📘</i>
+            <span>Subjects</span>
+          </router-link>
+          <router-link
+            to="/admin/certificates"
+            class="nav-link"
+            :class="{ active: $route.path.includes('/certificates') }"
+          >
+            <i class="icon">📄</i>
+            <span>Certificates</span>
+          </router-link>
         </div>
 
         <div class="nav-section">

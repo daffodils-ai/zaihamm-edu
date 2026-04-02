@@ -91,7 +91,7 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
               <div>
                 <h5 class="mb-1">Subject Results</h5>
-                <p class="text-muted mb-0">Add every subject result for this exam record.</p>
+                <p class="text-muted mb-0">Subjects are loaded from Subject master based on the selected class.</p>
               </div>
               <button type="button" class="btn btn-outline-primary" @click="addSubjectRow">
                 + Add Subject
@@ -105,45 +105,67 @@
             >
               <div class="row g-3 align-items-end">
                 <div class="col-lg-3">
-                  <CustomInput
-                    v-model="subject.subject"
+                  <CustomSelect
+                    v-model="subject.subjectId"
                     label="Subject"
-                    placeholder="Mathematics"
+                    :options="subjectOptions"
+                    :disabled="!form.classId"
+                    placeholder="Select class first"
                     required
-                    :error="subjectErrors(index).subject"
+                    :error="subjectErrors(index).subjectId"
                   />
                 </div>
                 <div class="col-lg-2 col-md-4">
                   <CustomInput
-                    v-model="subject.obtainedMarks"
-                    label="Obtained Marks"
+                    :model-value="subject.internalMarks"
+                    label="Internal Marks"
                     type="number"
-                    placeholder="85"
+                    placeholder="20"
                     required
-                    :error="subjectErrors(index).obtainedMarks"
+                    :error="subjectErrors(index).internalMarks"
+                    @update:modelValue="updateMarks(index, 'internalMarks', $event)"
                   />
                 </div>
                 <div class="col-lg-2 col-md-4">
+                  <CustomInput
+                    :model-value="subject.externalMarks"
+                    label="External Marks"
+                    type="number"
+                    placeholder="80"
+                    required
+                    :error="subjectErrors(index).externalMarks"
+                    @update:modelValue="updateMarks(index, 'externalMarks', $event)"
+                  />
+                </div>
+                <div class="col-lg-1 col-md-4">
+                  <CustomInput
+                    :model-value="subject.obtainedMarks"
+                    label="Obtained"
+                    type="number"
+                    readonly
+                  />
+                </div>
+                <div class="col-lg-1 col-md-4">
                   <CustomInput
                     v-model="subject.passMarks"
-                    label="Pass Marks"
+                    label="Pass"
                     type="number"
                     placeholder="33"
                     required
                     :error="subjectErrors(index).passMarks"
                   />
                 </div>
-                <div class="col-lg-2 col-md-4">
+                <div class="col-lg-1 col-md-4">
                   <CustomInput
                     v-model="subject.totalMarks"
-                    label="Total Marks"
+                    label="Total"
                     type="number"
                     placeholder="100"
                     required
                     :error="subjectErrors(index).totalMarks"
                   />
                 </div>
-                <div class="col-lg-2 col-md-8">
+                <div class="col-lg-1 col-md-6">
                   <CustomInput
                     v-model="subject.grade"
                     label="Grade"
@@ -152,7 +174,7 @@
                     :error="subjectErrors(index).grade"
                   />
                 </div>
-                <div class="col-lg-1 col-md-4">
+                <div class="col-lg-1 col-md-6">
                   <button
                     type="button"
                     class="btn btn-outline-danger w-100"
@@ -203,7 +225,7 @@
 
 <script>
 import { mapActions } from 'vuex';
-import { classes, sections, students } from '../../../api/api.js';
+import { classes, sections, students, subjects } from '../../../api/api.js';
 import CustomButton from '../../../components/CustomButton.vue';
 import CustomInput from '../../../components/CustomInput.vue';
 import CustomSelect from '../../../components/CustomSelect.vue';
@@ -211,8 +233,10 @@ import AlertComponent from '../../../components/AlertComponent.vue';
 import { getErrorMessage } from '../../../utils/validation.js';
 
 const createSubjectRow = () => ({
-  subject: '',
-  obtainedMarks: '',
+  subjectId: '',
+  internalMarks: '',
+  externalMarks: '',
+  obtainedMarks: 0,
   passMarks: '',
   totalMarks: '',
   grade: ''
@@ -237,8 +261,9 @@ export default {
       errorMessage: '',
       isLoading: false,
       allSections: [],
-      studentOptions: [],
-      classOptions: [],
+      allStudents: [],
+      availableSubjects: [],
+      classOptions: []
     };
   },
   computed: {
@@ -246,14 +271,26 @@ export default {
       return !!this.$route.params.id;
     },
     sectionOptions() {
-      const selectedClassId = this.form.classId;
-      const items = selectedClassId
-        ? this.allSections.filter((section) => section.classId === selectedClassId)
-        : this.allSections;
-
-      return items.map((section) => ({
-        value: section._id,
-        label: section.className ? `${section.name} (${section.className})` : section.name
+      return this.allSections
+        .filter((section) => !this.form.classId || section.classId === this.form.classId)
+        .map((section) => ({
+          value: section._id,
+          label: section.className ? `${section.name} (${section.className})` : section.name
+        }));
+    },
+    studentOptions() {
+      return this.allStudents
+        .filter((student) => !this.form.classId || student.classId === this.form.classId)
+        .filter((student) => !this.form.sectionId || student.sectionId === this.form.sectionId)
+        .map((student) => ({
+          value: student._id,
+          label: student.registrationNumber ? `${student.fullName} (${student.registrationNumber})` : student.fullName
+        }));
+    },
+    subjectOptions() {
+      return this.availableSubjects.map((subject) => ({
+        value: subject._id,
+        label: subject.name
       }));
     },
     computedTotals() {
@@ -264,15 +301,30 @@ export default {
     }
   },
   watch: {
-    'form.classId'(value) {
-      if (!value) {
-        this.form.sectionId = '';
-        return;
-      }
+    'form.classId': {
+      async handler(value, oldValue) {
+        if (!value) {
+          this.form.sectionId = '';
+          this.form.studentId = '';
+          this.availableSubjects = [];
+          this.form.subjects = this.form.subjects.map(() => createSubjectRow());
+          return;
+        }
 
-      const valid = this.allSections.some((section) => section._id === this.form.sectionId && section.classId === value);
-      if (!valid) {
-        this.form.sectionId = '';
+        if (oldValue && oldValue !== value) {
+          this.form.sectionId = '';
+          this.form.studentId = '';
+          this.form.subjects = this.form.subjects.map(() => createSubjectRow());
+        }
+
+        await this.loadSubjectsForClass(value);
+      }
+    },
+    'form.sectionId'(value) {
+      if (!value) return;
+      const validStudent = this.allStudents.some((student) => student._id === this.form.studentId && student.sectionId === value);
+      if (!validStudent) {
+        this.form.studentId = '';
       }
     }
   },
@@ -283,6 +335,10 @@ export default {
       fetchExamResultById: 'fetchById'
     }),
     addSubjectRow() {
+      if (!this.form.classId) {
+        this.errorMessage = 'Select class before adding subjects';
+        return;
+      }
       this.form.subjects.push(createSubjectRow());
     },
     removeSubjectRow(index) {
@@ -292,17 +348,18 @@ export default {
     subjectErrors(index) {
       return this.errors.subjects?.[index] || {};
     },
+    updateMarks(index, key, value) {
+      this.form.subjects[index][key] = value;
+      const internal = Number(this.form.subjects[index].internalMarks) || 0;
+      const external = Number(this.form.subjects[index].externalMarks) || 0;
+      this.form.subjects[index].obtainedMarks = internal + external;
+    },
     async loadDropdownData() {
       const [studentsResponse, classesResponse, sectionsResponse] = await Promise.all([
-        students.getAll(1, 200),
+        students.getAll(1, 500),
         classes.getAll(1, 200),
         sections.getAll(1, 200)
       ]);
-
-      this.studentOptions = (studentsResponse?.data || []).map((student) => ({
-        value: student._id,
-        label: student.registrationNumber ? `${student.fullName} (${student.registrationNumber})` : student.fullName
-      }));
 
       this.classOptions = (classesResponse?.data || []).map((cls) => ({
         value: cls._id,
@@ -315,6 +372,24 @@ export default {
         classId: section.classId?._id || section.classId,
         className: classMap[section.classId?._id || section.classId] || ''
       }));
+
+      this.allStudents = (studentsResponse?.data || []).map((student) => ({
+        ...student,
+        classId: student.class?._id || student.latestSession?.classId?._id || student.latestSession?.classId || '',
+        sectionId: student.section?._id || student.latestSession?.sectionId?._id || student.latestSession?.sectionId || ''
+      }));
+    },
+    async loadSubjectsForClass(classId) {
+      const response = await subjects.getAvailable(classId);
+      this.availableSubjects = response?.data || [];
+
+      const validIds = new Set(this.availableSubjects.map((item) => item._id));
+      this.form.subjects = this.form.subjects.map((entry) => {
+        if (!entry.subjectId || validIds.has(entry.subjectId)) {
+          return entry;
+        }
+        return createSubjectRow();
+      });
     },
     async loadExamResult() {
       const response = await this.fetchExamResultById(this.$route.params.id);
@@ -335,13 +410,19 @@ export default {
         examName: result.examName || '',
         examDate: result.examDate ? String(result.examDate).slice(0, 10) : '',
         subjects: (result.subjects || []).map((subject) => ({
-          subject: subject.subject || '',
-          obtainedMarks: subject.obtainedMarks ?? '',
+          subjectId: subject.subjectId?._id || subject.subjectId || '',
+          internalMarks: subject.internalMarks ?? '',
+          externalMarks: subject.externalMarks ?? '',
+          obtainedMarks: subject.obtainedMarks ?? 0,
           passMarks: subject.passMarks ?? '',
           totalMarks: subject.totalMarks ?? '',
           grade: subject.grade || ''
         }))
       };
+
+      if (this.form.classId) {
+        await this.loadSubjectsForClass(this.form.classId);
+      }
     },
     validateForm() {
       const errors = {};
@@ -352,43 +433,45 @@ export default {
       if (!this.form.examName?.trim()) errors.examName = 'Exam name is required';
       if (!this.form.examDate) errors.examDate = 'Exam date is required';
 
-      const subjects = [];
-      const seenSubjects = new Set();
+      const subjectErrors = [];
+      const seenSubjectIds = new Set();
 
       this.form.subjects.forEach((subject, index) => {
         const itemErrors = {};
-        const name = subject.subject?.trim();
-        const obtainedMarks = Number(subject.obtainedMarks);
+        const subjectId = subject.subjectId?.trim();
+        const internalMarks = Number(subject.internalMarks);
+        const externalMarks = Number(subject.externalMarks);
+        const obtainedMarks = internalMarks + externalMarks;
         const passMarks = Number(subject.passMarks);
         const totalMarks = Number(subject.totalMarks);
 
-        if (!name) itemErrors.subject = 'Subject is required';
-        if (Number.isNaN(obtainedMarks)) itemErrors.obtainedMarks = 'Obtained marks are required';
+        if (!subjectId) itemErrors.subjectId = this.form.classId ? 'Subject is required' : 'Select class first';
+        if (Number.isNaN(internalMarks)) itemErrors.internalMarks = 'Internal marks are required';
+        if (Number.isNaN(externalMarks)) itemErrors.externalMarks = 'External marks are required';
         if (Number.isNaN(passMarks)) itemErrors.passMarks = 'Pass marks are required';
         if (Number.isNaN(totalMarks)) itemErrors.totalMarks = 'Total marks are required';
         if (!subject.grade?.trim()) itemErrors.grade = 'Grade is required';
 
         if (!Number.isNaN(obtainedMarks) && !Number.isNaN(totalMarks) && obtainedMarks > totalMarks) {
-          itemErrors.obtainedMarks = 'Obtained marks cannot exceed total marks';
+          itemErrors.externalMarks = 'Internal + external marks cannot exceed total marks';
         }
 
         if (!Number.isNaN(passMarks) && !Number.isNaN(totalMarks) && passMarks > totalMarks) {
           itemErrors.passMarks = 'Pass marks cannot exceed total marks';
         }
 
-        const normalized = name?.toLowerCase();
-        if (normalized && seenSubjects.has(normalized)) {
-          itemErrors.subject = 'Duplicate subject not allowed';
+        if (subjectId && seenSubjectIds.has(subjectId)) {
+          itemErrors.subjectId = 'Duplicate subject not allowed';
         }
-        if (normalized) {
-          seenSubjects.add(normalized);
+        if (subjectId) {
+          seenSubjectIds.add(subjectId);
         }
 
-        subjects[index] = itemErrors;
+        subjectErrors[index] = itemErrors;
       });
 
-      if (subjects.some((item) => Object.keys(item).length)) {
-        errors.subjects = subjects;
+      if (subjectErrors.some((item) => Object.keys(item).length)) {
+        errors.subjects = subjectErrors;
       }
 
       this.errors = errors;
@@ -399,13 +482,22 @@ export default {
         ...this.form,
         sectionId: this.form.sectionId || null,
         year: Number(this.form.year),
-        subjects: this.form.subjects.map((subject) => ({
-          subject: subject.subject.trim(),
-          obtainedMarks: Number(subject.obtainedMarks),
-          passMarks: Number(subject.passMarks),
-          totalMarks: Number(subject.totalMarks),
-          grade: subject.grade.trim()
-        }))
+        subjects: this.form.subjects.map((subject) => {
+          const selectedSubject = this.availableSubjects.find((item) => item._id === subject.subjectId);
+          const internalMarks = Number(subject.internalMarks);
+          const externalMarks = Number(subject.externalMarks);
+
+          return {
+            subjectId: subject.subjectId,
+            subject: selectedSubject?.name || '',
+            internalMarks,
+            externalMarks,
+            obtainedMarks: internalMarks + externalMarks,
+            passMarks: Number(subject.passMarks),
+            totalMarks: Number(subject.totalMarks),
+            grade: subject.grade.trim()
+          };
+        })
       };
     },
     async handleSubmit() {

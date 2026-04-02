@@ -1,10 +1,27 @@
 import mongoose from 'mongoose';
 
 const examSubjectSchema = new mongoose.Schema({
+    subjectId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'subject',
+        required: true
+    },
     subject: {
         type: String,
         required: true,
         trim: true
+    },
+    internalMarks: {
+        type: Number,
+        required: true,
+        min: 0,
+        default: 0
+    },
+    externalMarks: {
+        type: Number,
+        required: true,
+        min: 0,
+        default: 0
     },
     obtainedMarks: {
         type: Number,

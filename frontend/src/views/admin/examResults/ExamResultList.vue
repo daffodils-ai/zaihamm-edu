@@ -128,6 +128,8 @@
             <thead>
               <tr>
                 <th>Subject</th>
+                <th>Internal</th>
+                <th>External</th>
                 <th>Obtained</th>
                 <th>Pass</th>
                 <th>Total</th>
@@ -135,8 +137,10 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="subject in result.subjects" :key="subject._id || subject.subject">
+              <tr v-for="subject in result.subjects" :key="subject._id || subject.subjectId?._id || subject.subjectId || subject.subject">
                 <td class="fw-semibold">{{ subject.subject }}</td>
+                <td>{{ subject.internalMarks ?? '-' }}</td>
+                <td>{{ subject.externalMarks ?? '-' }}</td>
                 <td>{{ subject.obtainedMarks }}</td>
                 <td>{{ subject.passMarks }}</td>
                 <td>{{ subject.totalMarks }}</td>

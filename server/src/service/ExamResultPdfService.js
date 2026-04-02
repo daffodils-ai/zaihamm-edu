@@ -282,12 +282,14 @@ class ExamResultPdfService {
 
     drawTableHeader(doc, startY) {
         const columns = [
-            { label: 'Subject', x: PAGE.margin + 8, width: 200, align: 'left' },
-            { label: 'Obtained', x: PAGE.margin + 214, width: 68, align: 'center' },
-            { label: 'Pass', x: PAGE.margin + 286, width: 62, align: 'center' },
-            { label: 'Total', x: PAGE.margin + 352, width: 62, align: 'center' },
-            { label: 'Grade', x: PAGE.margin + 418, width: 56, align: 'center' },
-            { label: 'Status', x: PAGE.margin + 478, width: 36, align: 'center' }
+            { label: 'Subject', x: PAGE.margin + 8, width: 136, align: 'left' },
+            { label: 'Internal', x: PAGE.margin + 148, width: 50, align: 'center' },
+            { label: 'External', x: PAGE.margin + 202, width: 50, align: 'center' },
+            { label: 'Obtained', x: PAGE.margin + 256, width: 58, align: 'center' },
+            { label: 'Pass', x: PAGE.margin + 318, width: 48, align: 'center' },
+            { label: 'Total', x: PAGE.margin + 370, width: 48, align: 'center' },
+            { label: 'Grade', x: PAGE.margin + 422, width: 42, align: 'center' },
+            { label: 'Status', x: PAGE.margin + 468, width: 46, align: 'center' }
         ];
 
         doc.roundedRect(PAGE.margin, startY, this.getContentWidth(doc), 28, 6)
@@ -338,16 +340,18 @@ class ExamResultPdfService {
             doc.fillColor(COLORS.text)
                 .font('Helvetica')
                 .fontSize(9)
-                .text(subject.subject, PAGE.margin + 8, rowY + 8, { width: 200 })
-                .text(formatValue(subject.obtainedMarks), PAGE.margin + 214, rowY + 8, { width: 68, align: 'center' })
-                .text(formatValue(subject.passMarks), PAGE.margin + 286, rowY + 8, { width: 62, align: 'center' })
-                .text(formatValue(subject.totalMarks), PAGE.margin + 352, rowY + 8, { width: 62, align: 'center' })
-                .text(formatValue(subject.grade), PAGE.margin + 418, rowY + 8, { width: 56, align: 'center' });
+                .text(subject.subject, PAGE.margin + 8, rowY + 8, { width: 136 })
+                .text(formatValue(subject.internalMarks), PAGE.margin + 148, rowY + 8, { width: 50, align: 'center' })
+                .text(formatValue(subject.externalMarks), PAGE.margin + 202, rowY + 8, { width: 50, align: 'center' })
+                .text(formatValue(subject.obtainedMarks), PAGE.margin + 256, rowY + 8, { width: 58, align: 'center' })
+                .text(formatValue(subject.passMarks), PAGE.margin + 318, rowY + 8, { width: 48, align: 'center' })
+                .text(formatValue(subject.totalMarks), PAGE.margin + 370, rowY + 8, { width: 48, align: 'center' })
+                .text(formatValue(subject.grade), PAGE.margin + 422, rowY + 8, { width: 42, align: 'center' });
 
             doc.fillColor(passed ? COLORS.success : COLORS.danger)
                 .font('Helvetica-Bold')
-                .text(passed ? 'P' : 'F', PAGE.margin + 478, rowY + 8, {
-                    width: 36,
+                .text(passed ? 'P' : 'F', PAGE.margin + 468, rowY + 8, {
+                    width: 46,
                     align: 'center'
                 });
 

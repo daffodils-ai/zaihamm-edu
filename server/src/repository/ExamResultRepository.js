@@ -10,7 +10,8 @@ class ExamResultRepository {
         return ExamResult.findById(id)
             .populate('studentId', 'fullName registrationNumber')
             .populate('classId', 'name classCode')
-            .populate('sectionId', 'name');
+            .populate('sectionId', 'name')
+            .populate('subjects.subjectId', 'name classIds');
     }
 
     async findDuplicateExam({
@@ -59,6 +60,7 @@ class ExamResultRepository {
                 .populate('studentId', 'fullName registrationNumber')
                 .populate('classId', 'name classCode')
                 .populate('sectionId', 'name')
+                .populate('subjects.subjectId', 'name classIds')
                 .sort({ examDate: -1, createdAt: -1 })
                 .skip(pagination.skip)
                 .limit(pagination.limit),
@@ -76,11 +78,18 @@ class ExamResultRepository {
         )
             .populate('studentId', 'fullName registrationNumber')
             .populate('classId', 'name classCode')
-            .populate('sectionId', 'name');
+            .populate('sectionId', 'name')
+            .populate('subjects.subjectId', 'name classIds');
     }
 
     async delete(id) {
         return ExamResult.findByIdAndDelete(id);
+    }
+
+    async isSubjectLinked(subjectId) {
+        return ExamResult.exists({
+            'subjects.subjectId': subjectId
+        });
     }
 }
 

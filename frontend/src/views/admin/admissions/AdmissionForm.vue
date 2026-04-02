@@ -171,6 +171,15 @@
 
             <div class="col-md-6">
               <CustomInput
+                v-model="form.motherAadharNo"
+                label="Mother Aadhar Number"
+                placeholder="Enter mother's aadhar number"
+                :error="errors.motherAadharNo"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <CustomInput
                 v-model="form.guardianName"
                 label="Guardian Name"
                 placeholder="Enter guardian's name"
@@ -230,6 +239,28 @@
                 :error="errors.fullAddress"
               ></textarea>
             </div>
+
+            <div class="col-12">
+              <h5 class="border-bottom pb-2 mt-4">Previous Academic Information</h5>
+            </div>
+
+            <div class="col-md-6">
+              <CustomInput
+                v-model="form.previousSchool"
+                label="Previous School Name"
+                placeholder="Enter previous school name"
+                :error="errors.previousSchool"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <CustomInput
+                v-model="form.previousClass"
+                label="Previous Class"
+                placeholder="Enter previous class"
+                :error="errors.previousClass"
+              />
+            </div>
           </div>
 
           <div class="d-flex gap-2 mt-5">
@@ -272,11 +303,14 @@ export default {
         parentEmail: '',
         fatherName: '',
         motherName: '',
+        motherAadharNo: '',
         guardianName: '',
         aadharNo: '',
         parentAadharNumber: '',
         parentAadharRelation: '',
-        fullAddress: ''
+        fullAddress: '',
+        previousSchool: '',
+        previousClass: ''
       },
       relationOptions: ['father', 'mother', 'brother', 'sister', 'other'],
       genderOptions: [
@@ -389,11 +423,14 @@ export default {
             parentEmail: admission.parentEmail || '',
             fatherName: admission.fatherName || '',
             motherName: admission.motherName || '',
+            motherAadharNo: admission.motherAadharNo || '',
             guardianName: admission.guardianName || '',
             aadharNo: admission.aadharNo || '',
             parentAadharNumber: admission.parentAadharNumber || '',
             parentAadharRelation: admission.parentAadharRelation || '',
-            fullAddress: admission.fullAddress || ''
+            fullAddress: admission.fullAddress || '',
+            previousSchool: admission.previousSchool || '',
+            previousClass: admission.previousClass || ''
           };
         }
       } catch (error) {
@@ -479,6 +516,7 @@ export default {
           parentEmail: this.form.parentEmail,
           fatherName: this.form.fatherName,
           motherName: this.form.motherName,
+          motherAadharNo: this.form.motherAadharNo,
           guardianName: this.form.guardianName,
           aadharNo: this.form.aadharNo,
           parentAadharNumber: this.form.parentAadharNumber,

@@ -26,6 +26,22 @@
       <div class="card-body">
         <form @submit.prevent="handleSubmit">
           <div class="row g-4">
+            <div v-if="isEditMode" class="col-12">
+              <div class="profile-strip">
+                <div class="profile-preview">
+                  <img v-if="form.studentPic" :src="form.studentPic" alt="Student profile" class="profile-photo" />
+                  <div v-else class="profile-placeholder">No Photo</div>
+                </div>
+                <div class="profile-actions">
+                  <h5 class="mb-1">Student Profile</h5>
+                  <p class="text-muted mb-3">Profile photo preview and current-session ID card download.</p>
+                  <button type="button" class="btn btn-outline-dark" :disabled="idCardLoading" @click="downloadIdCard">
+                    {{ idCardLoading ? 'Preparing ID Card...' : 'Download ID Card' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div class="col-md-6">
               <CustomInput
                 v-model="form.fullName"
@@ -208,7 +224,7 @@
 
 <script>
 import { mapActions } from 'vuex';
-import { classes, sections } from '../../../api/api.js';
+import { classes, sections, students } from '../../../api/api.js';
 import CustomInput from '../../../components/CustomInput.vue';
 import CustomSelect from '../../../components/CustomSelect.vue';
 import CustomButton from '../../../components/CustomButton.vue';
@@ -229,6 +245,7 @@ export default {
         fullName: '',
         age: '',
         dateOfBirth: '',
+        studentPic: '',
         studentEmail: '',
         mobile: '',
         aadharNo: '',
@@ -250,6 +267,7 @@ export default {
       successMessage: '',
       errorMessage: '',
       isLoading: false,
+      idCardLoading: false,
       classOptions: [],
       allSections: [],
       parentAadharRelationOptions: [
@@ -318,6 +336,7 @@ export default {
         fullName: student?.fullName || '',
         age: student?.age || '',
         dateOfBirth: student?.dateOfBirth ? String(student.dateOfBirth).slice(0, 10) : '',
+        studentPic: student?.studentPic || '',
         studentEmail: student?.studentEmail || '',
         mobile: student?.mobile || '',
         aadharNo: student?.aadharNo || '',
@@ -394,6 +413,31 @@ export default {
       return Object.keys(this.errors).length === 0;
     },
 
+    saveBlob(blob, fileName) {
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(url);
+    },
+
+    async downloadIdCard() {
+      if (!this.isEditMode) return;
+
+      try {
+        this.idCardLoading = true;
+        const blob = await students.downloadIdCard(this.$route.params.id);
+        this.saveBlob(blob, `${(this.form.fullName || 'student').replace(/\s+/g, '_')}_id_card.pdf`);
+      } catch (error) {
+        this.errorMessage = getErrorMessage(error);
+      } finally {
+        this.idCardLoading = false;
+      }
+    },
+
     async handleSubmit() {
       if (!this.validateForm()) return;
 
@@ -448,5 +492,39 @@ export default {
 .page-header {
   border-bottom: 2px solid #3498db;
   padding-bottom: 1.5rem;
+}
+
+.profile-strip {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid #dbe7f3;
+  border-radius: 18px;
+  background: #f8fbff;
+}
+
+.profile-preview {
+  flex: 0 0 auto;
+}
+
+.profile-photo {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 18px;
+  border: 1px solid #d9e2ec;
+}
+
+.profile-placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 18px;
+  border: 1px dashed #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  color: #64748b;
 }
 </style>
